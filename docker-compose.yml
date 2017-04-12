@@ -4,17 +4,12 @@ services:
     build: ./web
     volumes:
       - ./web:/www
-    volumes_from:
-      - ftp
     depends_on:
-      - ftp
-      - maildev
       - postgres
     command: bash start.sh
     env_file: .env
     links:
       - postgres:postgres
-      - maildev:maildev
 
   postgres:
     image: postgres:9.5
