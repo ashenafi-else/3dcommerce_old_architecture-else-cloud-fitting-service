@@ -1,0 +1,37 @@
+version: "2"
+services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/www
+    volumes_from:
+      - ftp
+    depends_on:
+      - ftp
+      - maildev
+      - postgres
+    command: bash start.sh
+    env_file: .env
+    links:
+      - postgres:postgres
+      - maildev:maildev
+
+  postgres:
+    image: postgres:9.5
+    volumes:
+      - ./dockerfiles/pgdata:/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    env_file: .env
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:8080"
+    volumes:
+      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
+    volumes_from:
+      - web
+    depends_on:
+      - web
+    env_file: .env

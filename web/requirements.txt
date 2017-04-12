@@ -1,0 +1,13 @@
+coreapi==2.1.1
+Django==1.10.5
+django-rest-swagger==2.1.1
+djangorestframework==3.5.3
+itypes==1.1.0
+openapi-codec==1.2.1
+psycopg2==2.6.2
+requests==2.12.5
+simplejson==3.10.0
+uritemplate==3.0.0
+pycountry==17.1.8
+channels==1.1.1
+asgi_redis==1.1.0
