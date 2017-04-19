@@ -1,13 +1,13 @@
 from django.contrib.admin.options import TabularInline
-from fitting.models import Product, Last
-from common.proxy.base_models_admin import BaseModelAdmin
+from ..models import Product, Last
+from .base_models_admin import BaseModelAdmin
 
 
 class ProductProxy(Product):
 
-	class Meta:
-		proxy = True
-		verbose_name = 'Product lasts'
+    class Meta:
+        proxy = True
+        verbose_name = 'Product lasts'
         verbose_name_plural = 'Product lasts'
 
 
@@ -37,8 +37,7 @@ class ProductLastInline(TabularInline):
 
 class ProductAdmin(BaseModelAdmin):
 
-	fields = [
-        'id',
+    fields = [
         'uuid',
     ]
 
@@ -46,7 +45,6 @@ class ProductAdmin(BaseModelAdmin):
     ]
 
     list_display = [
-        'id',
         'uuid',
     ]
 
@@ -55,6 +53,6 @@ class ProductAdmin(BaseModelAdmin):
     )
 
     inlines = [
-        LastInline
+        ProductLastInline
     ]
 

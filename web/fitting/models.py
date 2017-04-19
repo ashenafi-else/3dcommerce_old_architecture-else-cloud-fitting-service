@@ -56,8 +56,11 @@ class Sizes(models.Model):
 
 class Last(models.Model):
     size = models.CharField(max_length=64)
-    attachatment = models.FileField()
+    attachment = models.FileField()
     path = models.CharField(max_length=1000, blank=True)
+    product = models.ForeignKey(
+        'Product'
+    )
 
     def __str__(self):
         return self.size
