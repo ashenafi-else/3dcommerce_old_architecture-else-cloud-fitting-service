@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db import connection, transaction
 
-from fitting.models import Scan, Shoe, CompareResults
+from fitting.models import Scan, CompareResult
 import logging
 
 logger = logging.getLogger(__name__)

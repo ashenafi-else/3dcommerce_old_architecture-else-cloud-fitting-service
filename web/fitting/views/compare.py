@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from fitting.models import Scan, Shoe, User, CompareResults
+from fitting.models import Scan, User, CompareResult
 from fitting.utils import compare_scan_with_shoe
 import logging
 

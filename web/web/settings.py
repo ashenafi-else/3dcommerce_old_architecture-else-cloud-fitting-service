@@ -133,9 +133,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-SCANNER_STORAGE_BASE_URL = 'https://else:7kjfWVWcRN@avatar3d.ibv.org:8443/webdav/ELSE/'
-
+if DEBUG:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "static"),
+    ]
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "attachments")
+MEDIA_URL = '/attachments/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+}
+SCANNER_STORAGE_BASE_URL = 'https://else:7kjfWVWcRN@avatar3d.ibv.org:8443/webdav/ELSE/'
 
 MAGENTO_BASE_URL = u'http://13.94.238.143/rest/'
 

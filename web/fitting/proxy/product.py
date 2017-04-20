@@ -7,16 +7,8 @@ class ProductProxy(Product):
 
     class Meta:
         proxy = True
-        verbose_name = 'Product lasts'
-        verbose_name_plural = 'Product lasts'
-
-
-class ProductLastProxy(Last):
-
-    class Meta:
-        proxy = True
         verbose_name = 'Product'
-        verbose_name_plural = 'Product'
+        verbose_name_plural = 'Products'
 
 
 class ProductLastInline(TabularInline):
