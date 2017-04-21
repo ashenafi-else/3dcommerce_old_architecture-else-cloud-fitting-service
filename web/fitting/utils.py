@@ -12,20 +12,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def upload_to_fitting(url, method):
-    request_to_fitting = requests.post(
-        'http://fittingwebapp.azurewebsites.net/api/{}'.format(method),
-        data=json.dumps({'Url': url}),
-        headers={
-            'Content-Type': 'application/json'
-        }
+def upload(url):
+    request = requests.get(
+        url=url,
     )
-    fitting_result = request_to_fitting.json()
-    if fitting_result['Succeded']:
-        fitting_path = fitting_result['Result']
-    else:
-        raise ValueError(fitting_result['Error'])
-    return fitting_path
+    return request.content
 
 
 class CompareShoesThread(Thread):
