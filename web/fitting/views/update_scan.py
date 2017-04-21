@@ -37,8 +37,8 @@ def update_scan_view(request):
     except ValueError:
         return HttpResponseBadRequest()
 
-    if is_scan_default or not user.default_scan_id:
-        user.default_scan_id = scan.id
+    if is_scan_default or not user.default_scans.all().exists():
+        user.default_scans.add(scan)
         user.save()
 
     return HttpResponse(
