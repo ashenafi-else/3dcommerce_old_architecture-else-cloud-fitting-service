@@ -2,14 +2,15 @@ import json
 import requests
 import csv
 import logging
-from fitting.models import Attribute
+from fitting.models import ScanAttribute
+from web.settings import ELSE_3D_SERVICE_SCRIPTS_URL
 
 logger = logging.getLogger(__name__)
 
 
 def get_3d_url(url):
     get_scan_3d = requests.post(
-        url='http://else-3d-service.cloudapp.net/scripts/scans_to_json',
+        url=f'{ELSE_3D_SERVICE_SCRIPTS_URL}scans_to_json',
         data=json.dumps({'stl_url': url}),
         headers={
             'Content-Type': 'application/json'
@@ -22,7 +23,7 @@ def get_3d_url(url):
 def get_scan_image_url(url):
     logger.debug(url);
     get_scan_image = requests.post(
-        url='http://else-3d-service.cloudapp.net/scripts/stl_to_image',
+        url=f'{ELSE_3D_SERVICE_SCRIPTS_URL}stl_to_image',
         data=json.dumps({'stl_url': url, 'resolution': ['384', '683']}),
         headers={
             'Content-Type': 'application/json'
@@ -41,8 +42,8 @@ def update_scan_attributes(user, base_url, scan, scan_type):
         for key, value in row.items():
             if key != '':
                 try:
-                    attribute = Attribute.objects.get(user=user, name=key, scan=scan)
-                except Attribute.DoesNotExist:
-                    attribute = Attribute(user=user, name=key, scan=scan)
+                    attribute = ScanAttribute.objects.get(user=user, name=key, scan=scan)
+                except ScanAttribute.DoesNotExist:
+                    attribute = ScanAttribute(user=user, name=key, scan=scan)
                 attribute.value = value
                 attribute.save()

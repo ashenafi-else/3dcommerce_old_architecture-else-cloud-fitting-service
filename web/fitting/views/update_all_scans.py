@@ -1,7 +1,7 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
-from fitting.models import Scan, User, Attribute
+from fitting.models import Scan, User, ScanAttribute
 from .update_scan import update_scan
 import logging
 

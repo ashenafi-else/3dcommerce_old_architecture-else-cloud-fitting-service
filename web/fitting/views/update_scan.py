@@ -33,7 +33,7 @@ def update_scan_view(request):
         user = User(uuid=user_uuid)
         user.save()
     try:
-        scans = update_scan(user, scanner, scan_id, scan_type, request.build_absolute_uri)
+        scans = update_scan(user, scanner, scan_id, scan_type)
     except ValueError:
         return HttpResponseBadRequest()
 
@@ -48,8 +48,8 @@ def update_scan_view(request):
 
 
 @transaction.atomic
-def update_scan(user, scanner, scan_id, scan_type, absolute_uri_builder):
+def update_scan(user, scanner, scan_id, scan_type):
 
-    result = update_scan_functions[scan_type](user, scanner, scan_id, scan_type, absolute_uri_builder)
+    result = update_scan_functions[scan_type](user, scanner, scan_id, scan_type)
     return result if isinstance(result, list) else list(result)
 

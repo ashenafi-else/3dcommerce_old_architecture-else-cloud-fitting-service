@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
 import json
-from fitting.models import User, Attribute, Scan
+from fitting.models import User, ScanAttribute, Scan
 
 
 @csrf_exempt

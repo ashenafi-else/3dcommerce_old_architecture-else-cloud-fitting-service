@@ -156,6 +156,7 @@ ASSESS_TOKEN = 'wbs1gdtgbl0nj8ckthmslhhf1iv4ywdc'
 ASSESS_TOKEN_SECRET = 'djdj7wn0uq04nlowphfxexh9hrm2ne9o'
 
 ELSE_3D_SERVICE_URL = u"http://else-3d-service.cloudapp.net/api"
+ELSE_3D_SERVICE_SCRIPTS_URL = 'http://else-3d-service.cloudapp.net/scripts/'
 
 DEFAULT_SHOES_SIZE = 37
 
