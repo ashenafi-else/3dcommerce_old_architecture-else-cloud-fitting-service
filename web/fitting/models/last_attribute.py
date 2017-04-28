@@ -1,10 +1,15 @@
 from django.db import models
+from .attribute import Attribute
 
 
-class LastAttribute(models.Model):
+class LastAttribute(Attribute):
     last = models.ForeignKey('Last')
-    name = models.CharField(max_length=100)
-    value = models.CharField(max_length=1000)
+    left_limit_value = models.FloatField(null=False, default=0)
+    best_value = models.FloatField(null=False, default=0)
+    right_limit_value = models.FloatField(null=False, default=0)
+    disabled = models.BooleanField(default=False)
 
     def __str__(self):
-        return 'name: {}, value: {}'.format(self.name, self.value)
+        
+        return super().__str__() + f', disabled: {self.disabled}'
+

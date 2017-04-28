@@ -22,6 +22,10 @@ class LastAttributesInline(TabularInline):
         fields = [
             'name',
             'value',
+            'left_limit_value',
+            'best_value',
+            'right_limit_value',
+            'disabled',
         ]
 
 

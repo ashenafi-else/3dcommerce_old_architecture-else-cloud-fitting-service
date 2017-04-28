@@ -6,7 +6,8 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db import connection, transaction
 
-from fitting.models import Scan, CompareResult
+from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute
+from fitting_algorithm import calc
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,42 +36,26 @@ class CompareShoesThread(Thread):
             connection.close()
 
 
-@transaction.atomic
-def compare_scan_with_shoe(shoe, scan):
+def compare_by_metrics(scan, last):
 
-    if not shoe.path_in_fitting_service:
-        shoe.path_in_fitting_service = upload_to_fitting(shoe.path, 'UploadTemplate')
-        shoe.save()
+    last_attributes = LastAttribute.objects.filter(last=last, disabled=False)
+    scan_metrics = []
+    last_metrics = []
 
-    request_to_fitting = requests.post(
-        'http://fittingwebapp.azurewebsites.net/api/fitting',
-        data=json.dumps(
-            {
-                'ScanBlobPath': scan.path_right_foot_in_fitting_service,
-                'TemplateBlobPath': shoe.path_in_fitting_service
-            }
-        ),
-        headers={
-            'Content-Type': 'application/json'
-        }
+    for last_attribute in last_attributes:
+        scan_attribute = ScanAttribute.objects.get(scan=scan, name=last_attribute.name)
+        scan_metrics.append(float(scan_attribute.value))
+        last_metrics.append(float(last_attribute.value))
+
+    limits = tuple((attr.left_limit_value, attr.best_value, attr.right_limit_value) for attr in last_attributes)
+
+    compare_result = CompareResult(
+        last=last,
+        scan_1=scan,
+        compare_result = calc(scan_metrics, last_metrics, limits),
+        compare_type=CompareResult.TYPE_FITTING,
+        compare_mode=CompareResult.MODE_METRICS,
     )
-
-    fitting_result = request_to_fitting.json()
-    try:
-        compare_result = CompareResults.objects.get(shoe_id=shoe.id, scan_id=scan.id,)
-    except CompareResults.DoesNotExist:
-        compare_result = CompareResults(
-            shoe_id=shoe.id,
-            scan_id=scan.id,
-        )
-    compare_result.compare_result = float(fitting_result['Result']['ResultpPoint3D']['ResultPercent'])
-    output_analysis_model_url = fitting_result['OutputAnalysisModelUrl']
-    output_factory_model_url = fitting_result['OutputFactoryModelUrl']
-    compare_result.output_model = get_fitting_image_url([output_analysis_model_url, output_factory_model_url])
-    try:
-        compare_result.save()
-    except (ValidationError, IntegrityError):
-        compare_result = CompareResults.objects.get(shoe_id=shoe.id, scan_id=scan.id,)
-        logger.debug('Try to duplicate compare result: "{}"'.format(compare_result))
+    compare_result.save()
 
     return compare_result

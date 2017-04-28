@@ -35,6 +35,7 @@ def update_scan_view(request):
     try:
         scans = update_scan(user, scanner, scan_id, scan_type)
     except ValueError:
+        logger.debug(f'scan {scan_id} desn`t update')
         return HttpResponseBadRequest()
 
     if is_scan_default or not user.default_scans.all().exists():
@@ -47,7 +48,6 @@ def update_scan_view(request):
     )
 
 
-@transaction.atomic
 def update_scan(user, scanner, scan_id, scan_type):
 
     result = update_scan_functions[scan_type](user, scanner, scan_id, scan_type)

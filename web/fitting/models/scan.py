@@ -14,7 +14,7 @@ class Scan(Attachment):
 
 	def __str__(self):
 		return 'scan_id: {}, user: {}, scanner: {}, type: {}, created_date: {}'.format(
-			self.scan_id, self.user_id, self.scanner, self.scan_type, self.created_date)
+			self.scan_id, self.user.uuid, self.scanner, self.scan_type, self.created_date)
 
 
 @receiver(models.signals.post_delete, sender=Scan)

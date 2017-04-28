@@ -39,4 +39,4 @@ class CompareResult(models.Model):
 		unique_together = (('last', 'scan_1', 'scan_2'),)
 
 	def __str__(self):
-		return 'shoe: {}, scan: {}, result: {}'.format(self.last, self.scan.scan_id, self.compare_result)
+		return f'last: {self.last}, scan_1: {self.scan_1}, scan_2: {self.scan_2}, result: {self.compare_result}'
