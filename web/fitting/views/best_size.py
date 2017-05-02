@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 def best_size(request):
 
-    best_size_result = CompareResult(compare_result=CompareResult.INF)
-    
+    best_size_result = CompareResult(compare_result=CompareResult.MIN)
+
     product_uuid = request.GET['product']
     user_uuid = request.GET['user']
     user = User.objects.get(uuid=user_uuid)
