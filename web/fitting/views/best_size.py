@@ -8,11 +8,19 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def compare_result_to_json(compare_result):
+
+    return {
+        'score': compare_result.compare_result,
+        'output_model': compare_result.output_model,
+        'size': str(compare_result.last.size)
+    }
+
 
 @csrf_exempt
 def best_size(request):
 
-    best_size_result = CompareResult(compare_result=CompareResult.INF)
+    best_size_result = CompareResult(compare_result=CompareResult.MIN)
     
     product_uuid = request.GET['product']
     user_uuid = request.GET['user']
@@ -44,11 +52,32 @@ def best_size(request):
         if compare_result.compare_result > best_size_result.compare_result:
             best_size_result = compare_result
 
+    try:
+        prev_best_size_result = CompareResult.objects.get(
+            last__product=best_size_result.product,
+            last__size__numeric_value=best_size_result.size.numeric_value - 1,
+            scan_1=scan
+        )
+    except CompareResult.DoesNotExist:
+        prev_best_size_result = None
+
+    try:
+        next_best_size_result = CompareResult.objects.get(
+            last__product=best_size_result.product,
+            last__size__numeric_value=best_size_result.size.numeric_value - 1,
+            scan_1=scan
+        )
+    except CompareResult.DoesNotExist:
+        next_best_size_result = None
+
     result = {
-        'best_size': {
-            'score': best_size_result.compare_result,
-            'output_model': best_size_result.output_model
-        }
+        'best_size': compare_result_to_json(best_size_result)
     }
+
+    if prev_best_size_result is not None:
+        result['prev_best_size'] = compare_result_to_json(prev_best_size_result)
+
+    if next_best_size_result is not None:
+        result['prev_best_size'] = compare_result_to_json(next_best_size_result)
 
     return HttpResponse(json.dumps(result))
