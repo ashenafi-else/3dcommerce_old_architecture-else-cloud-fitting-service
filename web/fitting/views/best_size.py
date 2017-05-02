@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
 from fitting.models import Scan, User, CompareResult, Last
@@ -21,7 +21,6 @@ def compare_result_to_json(compare_result):
 def best_size(request):
 
     best_size_result = CompareResult(compare_result=CompareResult.MIN)
-    
     product_uuid = request.GET['product']
     user_uuid = request.GET['user']
     user = User.objects.get(uuid=user_uuid)
@@ -31,7 +30,7 @@ def best_size(request):
     except MultiValueDictKeyError:
         scan_type = 'foot_right'
     try:
-        compare_type = request.GET['compare_type']
+        compare_type = CompareResult.MODE_3D if request.GET['compare_type'] == '3d' else CompareResult.MODE_METRICS
     except MultiValueDictKeyError:
         compare_type = CompareResult.MODE_METRICS
 
@@ -41,6 +40,8 @@ def best_size(request):
         scan = user.default_scans.get(scan_type=scan_type)
     except Scan.DoesNotExist:
         scan = Scan.objects.filter(user__uuid=user_uuid, scan_type=scan_type).first()
+        if scan is None:
+            return HttpResponseBadRequest()
         user.default_scans.add(scan)
         user.save()
 
@@ -54,8 +55,8 @@ def best_size(request):
 
     try:
         prev_best_size_result = CompareResult.objects.get(
-            last__product=best_size_result.product,
-            last__size__numeric_value=best_size_result.size.numeric_value - 1,
+            last__product=best_size_result.last.product,
+            last__size__numeric_value=best_size_result.last.size.numeric_value - 1,
             scan_1=scan
         )
     except CompareResult.DoesNotExist:
@@ -63,8 +64,8 @@ def best_size(request):
 
     try:
         next_best_size_result = CompareResult.objects.get(
-            last__product=best_size_result.product,
-            last__size__numeric_value=best_size_result.size.numeric_value - 1,
+            last__product=best_size_result.last.product,
+            last__size__numeric_value=best_size_result.last.size.numeric_value + 1,
             scan_1=scan
         )
     except CompareResult.DoesNotExist:
@@ -78,6 +79,6 @@ def best_size(request):
         result['prev_best_size'] = compare_result_to_json(prev_best_size_result)
 
     if next_best_size_result is not None:
-        result['prev_best_size'] = compare_result_to_json(next_best_size_result)
+        result['next_best_size'] = compare_result_to_json(next_best_size_result)
 
     return HttpResponse(json.dumps(result))

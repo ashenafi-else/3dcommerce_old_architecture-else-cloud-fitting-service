@@ -3,8 +3,8 @@ from django.db import models
 
 class CompareResult(models.Model):
 
-	INF = 0
-	SUP = 100
+	MIN = 0
+	MAX = 100
 
 	TYPE_SCAN = 'SCAN'
 	TYPE_FITTING = 'FITTING'
@@ -21,7 +21,7 @@ class CompareResult(models.Model):
 		(MODE_3D, '3d'),
 		(MODE_METRICS, 'metrics'),
 	)
-	
+
 	last = models.ForeignKey('Last', null=True,)
 	scan_1 = models.ForeignKey('Scan', related_name='scan_1', null=False,)
 	scan_2 = models.ForeignKey('Scan', related_name='scan_2', null=True, blank=True)
@@ -37,7 +37,7 @@ class CompareResult(models.Model):
 		choices=MODES,
 		default=MODE_3D,
 	)
-    
+
 	class Meta:
 
 		unique_together = (('last', 'scan_1', 'scan_2'),)
