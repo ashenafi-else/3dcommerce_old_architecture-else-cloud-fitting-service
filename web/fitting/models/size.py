@@ -18,6 +18,7 @@ class Size(models.Model):
     )
 
     value = models.CharField(max_length=64)
+    numeric_value = models.IntegerField()
     
     def __str__(self):
         return '{} - {}'.format(self.size_type, self.value)

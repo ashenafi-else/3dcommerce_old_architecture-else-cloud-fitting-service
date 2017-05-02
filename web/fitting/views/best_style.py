@@ -9,36 +9,36 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
-def compare(request):
+def best_style(request):
 
     BEST_STYLE_MAX_VALUE = 100
     user_uuid = request.GET['user_uuid']
-    shoe_uuid = request.GET['shoe_uuid']
+    product_uuid = request.GET['shoe_uuid']
+    scan_type = request.GET['type']
 
-    prev_shoe = None
-    next_shoe = None
+    prev_last = None
+    next_last = None
 
     user = User.objects.get(uuid=user_uuid)
-    scan = Scan.objects.filter(user=user,).first()
+    scan = user.default_scans.filter(scan_type=scan_type).first()
     best_size_score = BEST_STYLE_MAX_VALUE
     best_size_result = None
 
-    shoes = Last.objects.filter(product__uuid=shoe_uuid)
-    for shoe in shoes:
+    lasts = Last.objects.filter(product__uuid=product_uuid)
+    for last in Lasts:
         try:
-            compare_result = CompareResult.objects.get(last=shoe, scan_1=scan)
+            compare_result = CompareResult.objects.get(last=last, scan_1=scan)
         except CompareResult.DoesNotExist:
-            compare_result = compare_by_metrics(scan, shoe)
+            compare_result = compare_by_metrics(scan, last)
         if best_size_score > compare_result.compare_result:
             best_size_score = compare_result.compare_result
             best_size_result = compare_result
-        logger.debug(compare_result)
-    result = {}
-    # try:
-    #     shoe = Shoe.objects.get(uuid=shoe_uuid, size=user.size)
-    #     best_style_result = CompareResults.objects.get(shoe_id=shoe.id, scan_id=scan.id)
-    # except Shoe.DoesNotExist:
-    #     best_style_result = CompareResults(compare_result=BEST_STYLE_MAX_VALUE, output_model="")
+    
+    try:
+        last = Last.objects.get(product__uuid=product_uuid, size=user.size)
+        best_style_result = CompareResults.objects.get(last=last, scan_id=scan.id)
+    except Shoe.DoesNotExist:
+        best_style_result = CompareResults(compare_result=BEST_STYLE_MAX_VALUE, output_model="")
 
     # try:
     #     best_size_shoe = Shoe.objects.get(id=best_size_result.shoe_id)
