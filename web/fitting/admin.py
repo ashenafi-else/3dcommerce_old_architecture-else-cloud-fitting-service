@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Scan, Last, Product, User, ScanAttribute, CompareResult, Size
-from .proxy import ProductProxy, ProductAdmin, LastProxy, LastAdmin,  ScanProxy, ScanAdmin
+from .proxy import ProductProxy, ProductAdmin, LastProxy, LastAdmin, ScanProxy, ScanAdmin,  LastAttributeProxy, LastAttributeAdmin
 
 
 admin.site.site_title = 'Fitting'
@@ -11,6 +11,7 @@ admin.site.site_header = 'ELSE Fitting Administration'
 admin.site.register(ProductProxy, ProductAdmin)
 admin.site.register(LastProxy, LastAdmin)
 admin.site.register(ScanProxy, ScanAdmin)
+admin.site.register(LastAttributeProxy, LastAttributeAdmin)
 admin.site.register(Size)
 admin.site.register(User)
 admin.site.register(CompareResult)
