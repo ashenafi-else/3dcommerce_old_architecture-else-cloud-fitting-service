@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^user_profile', views.get_user_profile),
     url(r'^user_scans', views.get_user_scans),
     url(r'^update_all_scans', views.update_all_scans),
+    url(r'^update_lasts', views.update_lasts_view),
 ]

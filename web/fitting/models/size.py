@@ -1,24 +1,15 @@
 from django.db import models
+from .model_type import ModelType
 
 
-class Size(models.Model):
-
-    TYPE_CUSTOM = 'CUSTOM'
-    TYPE_SHOESIZE = 'SHOESIZE'
-
-    TYPES = (
-        (TYPE_CUSTOM, 'Undefined type'),
-        (TYPE_SHOESIZE, 'Shoe size'),
-    )
-
-    size_type = models.CharField(
-        max_length=64,
-        choices=TYPES,
-        default=TYPE_CUSTOM,
-    )
+class Size(ModelType):
 
     value = models.CharField(max_length=64)
     numeric_value = models.IntegerField()
+
+    class Meta:
+
+        unique_together = (('model_type', 'value',),)
     
     def __str__(self):
-        return '{} - {}'.format(self.size_type, self.value)
+        return '{} - {}'.format(str(self.model_type), self.value)

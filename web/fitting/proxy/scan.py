@@ -38,7 +38,7 @@ class ScanAdmin(BaseModelAdmin):
         'user',
         'scan_id',
         'scanner',
-        'scan_type',
+        'model_type',
         'created_date',
     ]
 
@@ -50,7 +50,7 @@ class ScanAdmin(BaseModelAdmin):
         'user',
         'scan_id',
         'scanner',
-        'scan_type',
+        'model_type',
         'created_date',
     ]
 
@@ -58,7 +58,7 @@ class ScanAdmin(BaseModelAdmin):
         'user',
         'scan_id',
         'scanner',
-        'scan_type',
+        'model_type',
         'created_date',
     )
 

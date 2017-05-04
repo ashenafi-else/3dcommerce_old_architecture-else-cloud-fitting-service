@@ -1,16 +1,17 @@
 from django.db import models
 from .attachment import Attachment
+from .model_type import ModelType
 from django.dispatch import receiver
 
 import os
 
 
-class Last(Attachment):
+class Last(Attachment, ModelType):
     size = models.ForeignKey('Size',)
     product = models.ForeignKey('Product',)
 
     def __str__(self):
-        return 'product: {}, size: {}'.format(str(self.product), str(self.size))
+        return 'product: {}, size: {}, type: {}'.format(str(self.product), str(self.size), str(self.model_type))
 
 
 @receiver(models.signals.post_delete, sender=Last)

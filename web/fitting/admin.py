@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Scan, Last, Product, User, ScanAttribute, CompareResult, Size
-from .proxy import ProductProxy, ProductAdmin, LastProxy, LastAdmin, ScanProxy, ScanAdmin,  LastAttributeProxy, LastAttributeAdmin
+from .proxy import ProductProxy, ProductAdmin, LastProxy, LastAdmin, ScanProxy, ScanAdmin, LastAttributeProxy, LastAttributeAdmin
 
 
 admin.site.site_title = 'Fitting'
