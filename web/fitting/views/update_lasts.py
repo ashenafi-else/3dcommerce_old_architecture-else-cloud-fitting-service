@@ -28,17 +28,17 @@ references = {
 @csrf_exempt
 def update_lasts_view(request):
 
-    # request_body = json.loads(request.body.decode("utf-8"))
+    request_body = json.loads(request.body.decode("utf-8"))
 
-    request_body = {
-        'products': [
-            {
-                'uuid': 'dasfsdf',
-                'url': 'https://publicdamelse.blob.core.windows.net/public/6a37e8f2-64fd-4390-873e-0bafc947028c/lol_ZY9CdgL.csv',
-                'last_type': 'foot'
-            }
-        ]
-    }
+    # request_body = {
+    #     'products': [
+    #         {
+    #             'uuid': 'dasfsdf',
+    #             'url': 'https://publicdamelse.blob.core.windows.net/public/6a37e8f2-64fd-4390-873e-0bafc947028c/lol_ZY9CdgL.csv',
+    #             'last_type': 'foot'
+    #         }
+    #     ]
+    # }
     result = []
 
     for product in request_body['products']:
