@@ -22,10 +22,7 @@ def update_scan_view(request):
     scanner = request.GET['scanner']
     scan_id = request.GET['scan']
     scan_type = request.GET['type']
-    try:
-        is_scan_default = str2bool(request.GET['is_default'])
-    except MultiValueDictKeyError:
-        is_scan_default = False
+    is_scan_default = str2bool(request.GET.get('is_default', 'false'))
 
     try:
         user = User.objects.get(uuid=user_uuid)

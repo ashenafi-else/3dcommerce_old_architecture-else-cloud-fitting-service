@@ -2,10 +2,15 @@ import json
 import requests
 import csv
 import logging
-from fitting.models import ScanAttribute
+from fitting.models import ScanAttribute, ModelType
 from web.settings import ELSE_3D_SERVICE_SCRIPTS_URL
 
 logger = logging.getLogger(__name__)
+
+attribute_urls_type = {
+    ModelType.TYPE_LEFT_FOOT: 'left',
+    ModelType.TYPE_RIGHT_FOOT: 'right',
+}
 
 
 def get_3d_url(url):
@@ -34,7 +39,7 @@ def get_scan_image_url(url):
 
 
 def update_scan_attributes(user, base_url, scan, scan_type):
-    path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(base_url, scan.scanner, scan.scan_id, scan.scan_id, scan_type.split('_').pop())
+    path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(base_url, scan.scanner, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type])
     request = requests.get(path_to_csv)
     profile = list(request.iter_lines(decode_unicode=True))[1:]
     request.raise_for_status()

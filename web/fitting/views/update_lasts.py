@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from pathlib import Path
-from fitting.models import Last, LastAttribute
+from fitting.models import Last, LastAttribute, ModelType, Product, Size
 from web.settings import str2bool, MEDIA_ROOT
 import requests
 import logging
@@ -81,8 +81,38 @@ def upload_csv(product, url):
     return csv_file_path
 
 
+def create_attribute(product, size, scan_attribute_name, name, value, ranges, last_type):
+
+    try:
+        last = Last.objects.get(product__uuid=product, size__value=size, model_type=last_type)
+    except Last.DoesNotExist:
+        product_obj = Product.objects.get(uuid=product)
+        size_obj = Size.objects.get(model_type=ModelType.TYPE_FOOT, value=size)
+        last = Last(product=product_obj, size=size_obj, model_type=last_type)
+        last.save()
+
+    attribute = LastAttribute(
+        last=last,
+        name=name,
+        value=value,
+        scan_attribute_name=scan_attribute_name,
+    )
+    attribute.disabled = True if scan_attribute_name == '' else False
+    if scan_attribute_name in references and not attribute.disabled:
+        attribute.left_limit_value = ranges[0]
+        attribute.best_value = ranges[1]
+        attribute.right_limit_value = ranges[2]
+
+    attribute.save()
+
+
 @transaction.atomic
 def update_last(product, url):
+
+    try:
+        Product.objects.get(uuid=product)
+    except Product.DoesNotExist:
+        Product(uuid=product).save()
 
     csv_file_path = upload_csv(product, url)
 
@@ -96,23 +126,9 @@ def update_last(product, url):
 
             for size in row:
                 
-                last = Last.objects.get(product__uuid=product, size__value=size)
-                attribute = LastAttribute(
-                    last=last,
-                    name=last_attribute_name,
-                    value=row[size],
-                    scan_attribute_name=scan_attribute_name,
-                )
-                if scan_attribute_name in references:
-                    attribute.left_limit_value=references[scan_attribute_name][2][0]
-                    attribute.best_value=references[scan_attribute_name][2][1]
-                    attribute.right_limit_value=references[scan_attribute_name][2][2]
-
-                attribute.disabled = True if scan_attribute_name == '' else False
-                attribute.save()
-
-
-                
+                default_ranges = ('', (0, 0, 0), (0, 0, 0))
+                create_attribute(product, size, scan_attribute_name, last_attribute_name, row[size], references.get(scan_attribute_name, default_ranges)[1], ModelType.TYPE_LEFT_FOOT)
+                create_attribute(product, size, scan_attribute_name, last_attribute_name, row[size], references.get(scan_attribute_name, default_ranges)[2], ModelType.TYPE_RIGHT_FOOT)
 
     if os.path.isfile(csv_file_path):
         os.remove(csv_file_path)

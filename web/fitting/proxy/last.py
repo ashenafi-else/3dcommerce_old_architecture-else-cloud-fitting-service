@@ -34,6 +34,7 @@ class LastAdmin(BaseModelAdmin):
     fields = [
         'product',
         'size',
+        'model_type',
     ]
 
     readonly_fields = [
@@ -42,11 +43,13 @@ class LastAdmin(BaseModelAdmin):
     list_display = [
         'product',
         'size',
+        'model_type',
     ]
 
     search_fields = (
         'product',
         'size',
+        'model_type',
     )
 
     inlines = [

@@ -15,9 +15,9 @@ STL_EXTENSION = 'stl'
 def update_scan(user, scanner, scan_id, scan_type, scan_path):
 
     try:
-        scan = Scan.objects.get(user=user, scan_type=scan_type, scan_id=scan_id)
+        scan = Scan.objects.get(user=user, model_type=scan_type, scan_id=scan_id)
     except Scan.DoesNotExist:
-        scan = Scan(user=user, scan_type=scan_type, scan_id=scan_id)
+        scan = Scan(user=user, model_type=scan_type, scan_id=scan_id)
     
     scan.scan_id = scan_id
     scan.scanner = scanner

@@ -43,7 +43,7 @@ def compare_by_metrics(scan, last):
     last_metrics = []
 
     for last_attribute in last_attributes:
-        scan_attribute = ScanAttribute.objects.get(scan=scan, name=last_attribute.name)
+        scan_attribute = ScanAttribute.objects.get(scan=scan, name=last_attribute.scan_attribute_name)
         scan_metrics.append(float(scan_attribute.value))
         last_metrics.append(float(last_attribute.value))
 
