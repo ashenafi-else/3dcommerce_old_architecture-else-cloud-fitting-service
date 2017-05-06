@@ -35,10 +35,10 @@ class Migration(migrations.Migration):
             name='model_type',
             field=models.CharField(choices=[('CUSTOM', 'Undefined type'), ('FOOT', 'Foot'), ('LEFT_FOOT', 'Foot left'), ('RIGHT_FOOT', 'Foot right')], default='CUSTOM', max_length=64),
         ),
-        # migrations.RemoveField(
-        #     model_name='size',
-        #     name='size_type',
-        # ),
+        migrations.RemoveField(
+            model_name='size',
+            name='size_type_id',
+        ),
         migrations.AlterUniqueTogether(
             name='size',
             unique_together=set([('model_type', 'value')]),
