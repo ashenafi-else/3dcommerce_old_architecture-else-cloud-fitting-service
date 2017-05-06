@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RemoveField(
             model_name='size',
-            name='size_type_id',
+            name='size_type',
         ),
         migrations.AlterUniqueTogether(
             name='size',
