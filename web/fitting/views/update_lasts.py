@@ -87,7 +87,10 @@ def create_attribute(product, size, scan_attribute_name, name, value, ranges, la
         last = Last.objects.get(product__uuid=product, size__value=size, model_type=last_type)
     except Last.DoesNotExist:
         product_obj = Product.objects.get(uuid=product)
-        size_obj = Size.objects.get(model_type=ModelType.TYPE_FOOT, value=size)
+        try:
+            size_obj = Size.objects.get(model_type=ModelType.TYPE_FOOT, value=size)
+        except Size.DoesNotExist:
+            logger.debug(size)
         last = Last(product=product_obj, size=size_obj, model_type=last_type)
         last.save()
 
@@ -120,15 +123,14 @@ def update_last(product, url):
         reader = csv.DictReader(csvfile, delimiter=',')
 
         for row in reader:
-
             last_attribute_name = row.pop('Last').strip()
-            scan_attribute_name = row.pop('Scan').strip()
+            scan_attribute_name = row.pop('Scan', '').strip()
 
             for size in row:
-                
+
                 default_ranges = ('', (0, 0, 0), (0, 0, 0))
-                create_attribute(product, size, scan_attribute_name, last_attribute_name, row[size], references.get(scan_attribute_name, default_ranges)[1], ModelType.TYPE_LEFT_FOOT)
-                create_attribute(product, size, scan_attribute_name, last_attribute_name, row[size], references.get(scan_attribute_name, default_ranges)[2], ModelType.TYPE_RIGHT_FOOT)
+                create_attribute(product, size.strip(), scan_attribute_name, last_attribute_name, row[size].strip(), references.get(scan_attribute_name, default_ranges)[1], ModelType.TYPE_LEFT_FOOT)
+                create_attribute(product, size.strip(), scan_attribute_name, last_attribute_name, row[size].strip(), references.get(scan_attribute_name, default_ranges)[2], ModelType.TYPE_RIGHT_FOOT)
 
     if os.path.isfile(csv_file_path):
         os.remove(csv_file_path)
