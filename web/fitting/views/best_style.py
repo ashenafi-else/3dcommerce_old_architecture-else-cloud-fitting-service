@@ -1,28 +1,24 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from fitting.models import Scan, User, CompareResult, Last
+from fitting.models import Scan, User, CompareResult, Last, ModelType, Size
 from .utils import compare_by_metrics
 import json
 
-@csrf_exempt
-def best_style(request):
-    user_uuid = request.GET['user']
-    product_uuid = request.GET['product']
-    size_type = request.GET['size_type']
-    scan_type = request.GET.get('scan_type', 'foot_right')
-    user = User.objects.get(uuid=user_uuid)
 
-    last = Last.objects.filter(product__uuid=product_uuid, size__size_type=size_type).first()
-    scan = Scan.objects.filter(user=user, scan_type=scan_type).first()
+compare_methods = {
+    CompareResult.MODE_METRICS: compare_by_metrics
+}
+
+
+def get_best_style(scan, last, compare_type):
+
     result = {}
 
     if last and scan:
-        best_style = CompareResult.objects.filter(last=last, scan_1=scan)
-
-        if best_style.exists():
-            best_style = best_style.first()
-        else:
-            best_style = compare_by_metrics(scan, last)
+        try:
+            best_style = CompareResult.objects.get(last=last, scan_1=scan)
+        except CompareResult.DoesNotExist:
+            best_style = compare_methods[compare_type](scan, last)
 
         result['best_style'] = {
             'score': best_style.compare_result,
@@ -35,5 +31,49 @@ def best_style(request):
             'output_model': '',
             'size': None,
         }
+    return result
+
+
+def foot_best_style(product_uuid, user, size, compare_type):
+
+    result = {}
+
+    left_last = Last.objects.filter(product__uuid=product_uuid, model_type=ModelType.TYPE_LEFT_FOOT).first()
+    right_last = Last.objects.filter(product__uuid=product_uuid, model_type=ModelType.TYPE_RIGHT_FOOT).first()
+    left_scan = user.default_scans.filter(model_type=ModelType.TYPE_LEFT_FOOT).first()
+    right_scan = user.default_scans.filter(model_type=ModelType.TYPE_RIGHT_FOOT).first()
+    
+    left_result = get_best_style(left_scan, left_last, compare_type)
+    right_result = get_best_style(right_scan, right_last, compare_type)
+
+    if left_result['best_style']['size'] and right_result['best_style']['size']:
+        result['best_style'] = {
+            'score': (left_result['best_style']['score'] + right_result['best_style']['score']) / 2,
+            'output_model': left_result['best_style']['output_model'],
+            'size': left_result['best_style']['size'],
+        }
+    else:
+        result = left_result if left_result['best_style']['size'] else right_result
+
+    return result    
+
+
+scan_types = {
+    ModelType.TYPE_FOOT: foot_best_style
+}
+
+
+@csrf_exempt
+def best_style(request):
+    user_uuid = request.GET['user']
+    product_uuid = request.GET['product']
+    size_type = request.GET.get('size_type', ModelType.TYPE_FOOT)
+    user = User.objects.get(uuid=user_uuid)
+    size = user.sizes.filter(model_type=size_type).first()
+    if size is None:
+        user.sizes.add(Size.objects.filter(model_type=size_type).first())
+    compare_type = request.GET.get('compare_type', CompareResult.MODE_METRICS)
+
+    result = scan_types[size_type](product_uuid, user, size, compare_type)
 
     return HttpResponse(json.dumps(result))

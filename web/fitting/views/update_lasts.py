@@ -87,19 +87,23 @@ def create_attribute(product, size, scan_attribute_name, name, value, ranges, la
         last = Last.objects.get(product__uuid=product, size__value=size, model_type=last_type)
     except Last.DoesNotExist:
         product_obj = Product.objects.get(uuid=product)
-        try:
-            size_obj = Size.objects.get(model_type=ModelType.TYPE_FOOT, value=size)
-        except Size.DoesNotExist:
-            logger.debug(size)
+        size_obj = Size.objects.get(model_type=ModelType.TYPE_FOOT, value=size)
         last = Last(product=product_obj, size=size_obj, model_type=last_type)
         last.save()
 
-    attribute = LastAttribute(
-        last=last,
-        name=name,
-        value=value,
-        scan_attribute_name=scan_attribute_name,
-    )
+    try:
+        attribute = LastAttribute.objects.get(
+            last=last,
+            name=name,
+            scan_attribute_name=scan_attribute_name,
+        )
+    except LastAttribute.DoesNotExist:
+        attribute = LastAttribute(
+            last=last,
+            name=name,
+            scan_attribute_name=scan_attribute_name,
+        )
+    attribute.value = value.replace(',', '.')
     attribute.disabled = True if scan_attribute_name == '' else False
     if scan_attribute_name in references and not attribute.disabled:
         attribute.left_limit_value = ranges[0]

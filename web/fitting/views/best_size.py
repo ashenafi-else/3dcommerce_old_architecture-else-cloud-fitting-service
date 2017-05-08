@@ -46,36 +46,28 @@ def get_foot_best_size(product_uuid, scans, compare_type):
             best_size_result = average_result
             best_size = pair[0].size
 
-    try:
-        prev_best_size_result_left = CompareResult.objects.get(
-            last__product__uuid=product_uuid,
-            last__size__numeric_value=best_size.numeric_value - 1,
-            scan_1=scans[0]
-        )
-        prev_best_size_result_right = CompareResult.objects.get(
-            last__product__uuid=product_uuid,
-            last__size__numeric_value=best_size.numeric_value - 1,
-            scan_1=scans[1]
-        )
-    except CompareResult.DoesNotExist:
-        prev_best_size_result_left = None
-        prev_best_size_result_right = None
+    prev_best_size_result_left = CompareResult.objects.filter(
+        last__product__uuid=product_uuid,
+        last__size__numeric_value__lt=best_size.numeric_value,
+        scan_1=scans[0]
+    ).order_by('last__size__numeric_value').last()
+    prev_best_size_result_right = CompareResult.objects.filter(
+        last__product__uuid=product_uuid,
+        last__size__numeric_value__lt=best_size.numeric_value,
+        scan_1=scans[1]
+    ).order_by('last__size__numeric_value').last()
 
-    try:
-        next_best_size_result_left = CompareResult.objects.get(
-            last__product__uuid=product_uuid,
-            last__size__numeric_value=best_size.numeric_value + 1,
-            scan_1=scans[0]
-        )
-        next_best_size_result_right = CompareResult.objects.get(
-            last__product__uuid=product_uuid,
-            last__size__numeric_value=best_size.numeric_value + 1,
-            scan_1=scans[1]
-        )
-    except CompareResult.DoesNotExist:
-        next_best_size_result_left = None
-        next_best_size_result_right = None
-
+    next_best_size_result_left = CompareResult.objects.filter(
+        last__product__uuid=product_uuid,
+        last__size__numeric_value__gt=best_size.numeric_value,
+        scan_1=scans[0]
+    ).order_by('last__size__numeric_value').first()
+    next_best_size_result_right = CompareResult.objects.filter(
+        last__product__uuid=product_uuid,
+        last__size__numeric_value__gt=best_size.numeric_value,
+        scan_1=scans[1]
+    ).order_by('last__size__numeric_value').first()
+    
     result = {
         'best_size': compare_result_to_json(
             CompareResult.objects.get(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type),
@@ -112,7 +104,7 @@ def best_size(request):
     user = User.objects.get(uuid=user_uuid)
 
     scan_type = request.GET.get('scan_type', ModelType.TYPE_LEFT_FOOT)
-    compare_type = CompareResult.MODE_3D if request.GET.get('compare_type', 'metrics') == '3d' else CompareResult.MODE_METRICS
+    compare_type = request.GET.get('compare_type', CompareResult.MODE_METRICS)
     
     scans = (get_default_scan(user, ModelType.TYPE_LEFT_FOOT), get_default_scan(user, ModelType.TYPE_RIGHT_FOOT))
 

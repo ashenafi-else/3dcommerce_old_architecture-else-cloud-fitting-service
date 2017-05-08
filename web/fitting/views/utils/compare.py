@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from django.db import connection, transaction
 
 from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute
-from fitting_algorithm import calc
+from fitting_algorithm import lists_comparison
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,16 +43,18 @@ def compare_by_metrics(scan, last):
     last_metrics = []
 
     for last_attribute in last_attributes:
-        scan_attribute = ScanAttribute.objects.get(scan=scan, name=last_attribute.scan_attribute_name)
-        scan_metrics.append(float(scan_attribute.value))
-        last_metrics.append(float(last_attribute.value))
+
+        scan_attribute = ScanAttribute.objects.filter(scan=scan, name=last_attribute.scan_attribute_name).first()
+        if scan_attribute is not None:
+            scan_metrics.append(float(scan_attribute.value))
+            last_metrics.append(float(last_attribute.value))
 
     limits = tuple((attr.left_limit_value, attr.best_value, attr.right_limit_value) for attr in last_attributes)
 
     compare_result = CompareResult(
         last=last,
         scan_1=scan,
-        compare_result = calc(scan_metrics, last_metrics, limits),
+        compare_result = lists_comparison(scan_metrics, last_metrics, limits),
         compare_type=CompareResult.TYPE_FITTING,
         compare_mode=CompareResult.MODE_METRICS,
     )
