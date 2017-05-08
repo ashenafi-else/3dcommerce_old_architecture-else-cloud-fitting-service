@@ -1,5 +1,5 @@
 from django.contrib.admin.options import TabularInline
-from ..models import LastAttribute, Last, Size
+from ..models import LastAttribute, Last , Size
 from .base_models_admin import BaseModelAdmin
 
 

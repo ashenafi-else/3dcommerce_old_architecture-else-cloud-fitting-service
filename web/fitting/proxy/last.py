@@ -33,7 +33,7 @@ class LastAdmin(BaseModelAdmin):
 
     fields = [
         'product',
-        'size',
+        # 'size',
         'model_type',
     ]
 
@@ -42,13 +42,13 @@ class LastAdmin(BaseModelAdmin):
 
     list_display = [
         'product',
-        'size',
+        # 'size',
         'model_type',
     ]
 
     search_fields = (
         'product',
-        'size',
+        # 'size',
         'model_type',
     )
 

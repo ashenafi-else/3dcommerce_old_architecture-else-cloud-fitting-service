@@ -7,7 +7,7 @@ import os
 
 
 class Last(Attachment, ModelType):
-    size = models.ForeignKey('Size',)
+    size = models.ForeignKey('Size', null=True)
     product = models.ForeignKey('Product',)
 
     def __str__(self):
