@@ -6,6 +6,7 @@ class Size(ModelType):
 
     value = models.CharField(max_length=64)
     numeric_value = models.IntegerField()
+    size_type_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
 
