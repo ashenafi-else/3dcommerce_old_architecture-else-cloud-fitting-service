@@ -90,10 +90,9 @@ def get_default_scan(user, scan_type):
         scan = user.default_scans.get(model_type=scan_type)
     except Scan.DoesNotExist:
         scan = Scan.objects.filter(user=user, model_type=scan_type).first()
-        if scan is None:
-            return HttpResponseBadRequest()
-        user.default_scans.add(scan)
-        user.save()
+        if scan is not None:
+            user.default_scans.add(scan)
+            user.save()
     return scan
 
 
@@ -104,7 +103,7 @@ def best_size(request):
     user_uuid = request.GET['user']
     user = User.objects.get(uuid=user_uuid)
 
-    scan_type = request.GET.get('scan_type', ModelType.TYPE_LEFT_FOOT)
+    scan_type = request.GET.get('scan_type', ModelType.TYPE_FOOT)
     compare_type = request.GET.get('compare_type', CompareResult.MODE_METRICS)
     
     scans = (get_default_scan(user, ModelType.TYPE_LEFT_FOOT), get_default_scan(user, ModelType.TYPE_RIGHT_FOOT))
