@@ -24,7 +24,7 @@ def get_best_style(scan, last, compare_type):
             'score': best_style.compare_result,
             'output_model': best_style.output_model,
             'size': best_style.last.size.value,
-            'size_type': compare_result_left.last.size.model_type
+            'size_type': best_style.last.size.model_type
         }
     else:
         result['best_style'] = {
