@@ -21,14 +21,14 @@ def get_best_style(scan, last, compare_type):
             best_style = compare_methods[compare_type](scan, last)
 
         result['best_style'] = {
-            'score': best_style.compare_result,
+            'score': int(best_style.compare_result),
             'output_model': best_style.output_model,
             'size': best_style.last.size.value,
             'size_type': best_style.last.size.model_type
         }
     else:
         result['best_style'] = {
-            'score': 0.0,
+            'score': 0,
             'output_model': '',
             'size': None,
             'size_type': None
@@ -50,7 +50,7 @@ def foot_best_style(product_uuid, user, size, compare_type):
 
     if left_result['best_style']['size'] and right_result['best_style']['size']:
         result['best_style'] = {
-            'score': (left_result['best_style']['score'] + right_result['best_style']['score']) / 2,
+            'score': (left_result['best_style']['score'] + right_result['best_style']['score']) // 2,
             'output_model': left_result['best_style']['output_model'],
             'size': left_result['best_style']['size'],
             'size_type': left_result['best_style']['size_type']

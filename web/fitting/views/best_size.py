@@ -15,7 +15,7 @@ compare_methods = {
 def compare_result_to_json(compare_result_left, compare_rsult_right):
 
     return {
-        'score': (compare_result_left.compare_result + compare_rsult_right.compare_result) / 2,
+        'score': int((compare_result_left.compare_result + compare_rsult_right.compare_result) / 2),
         'output_model': compare_result_left.output_model,
         'size': compare_result_left.last.size.value,
         'size_type': compare_result_left.last.size.model_type
@@ -71,8 +71,8 @@ def get_foot_best_size(product_uuid, scans, compare_type):
     
     result = {
         'best_size': compare_result_to_json(
-            CompareResult.objects.get(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type),
-            CompareResult.objects.get(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type)
+            CompareResult.objects.filter(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type).first(),
+            CompareResult.objects.filter(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type).first()
         )
     }
 
