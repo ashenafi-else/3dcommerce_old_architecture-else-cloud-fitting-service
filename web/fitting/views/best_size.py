@@ -17,7 +17,8 @@ def compare_result_to_json(compare_result_left, compare_rsult_right):
     return {
         'score': (compare_result_left.compare_result + compare_rsult_right.compare_result) / 2,
         'output_model': compare_result_left.output_model,
-        'size': str(compare_result_left.last.size)
+        'size': compare_result_left.last.size.value,
+        'size_type': compare_result_left.last.size.model_type
     }
 
 
