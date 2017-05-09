@@ -89,7 +89,7 @@ def get_default_scan(user, scan_type):
     try:
         scan = user.default_scans.get(model_type=scan_type)
     except Scan.DoesNotExist:
-        scan = Scan.objects.filter(user=user, scan_type=scan_type).first()
+        scan = Scan.objects.filter(user=user, model_type=scan_type).first()
         if scan is None:
             return HttpResponseBadRequest()
         user.default_scans.add(scan)
