@@ -55,6 +55,9 @@ def lists_comparison(list1, list2, ranges):
     # total = vector from 0 to [center_axis_value] * n
     total = math.sqrt(sum([center_axis_value ** 2] * len(list1)))
 
+    # correct cases when distance to value higher than to total (worst case)
+    value = value if value < total else total
+
     result = 100 - (value / total) * 100
 
     return result
