@@ -22,5 +22,4 @@ def get_fitting_image_url(urls):
             'Content-Type': 'application/json'
         }
     )
-    logger.debug(get_fitting_image.text)
     return get_fitting_image.json()['result_image_url']

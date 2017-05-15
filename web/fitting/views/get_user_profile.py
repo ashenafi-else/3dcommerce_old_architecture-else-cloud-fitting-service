@@ -8,16 +8,15 @@ from fitting.models import User, ScanAttribute, Scan
 @csrf_exempt
 def get_user_profile(request):
     user_uuid = request.GET['user_uuid']
+    scan_id = request.GET['scan']
     user_profile = {}
     user = User.objects.get(uuid=user_uuid)
-    try:
-        scan_id = Scan.objects.get(user_id=user.id, scan_id=request.GET['scan_id']).id
-    except (MultiValueDictKeyError, Scan.DoesNotExist):
-        scan_id = user.default_scan_id
-    attributes = Attribute.objects.filter(user_id=user.id, scan_id=scan_id)
-    for attribute in attributes:
-        user_profile[attribute.name] = {}
-        user_profile[attribute.name]['left'] = attribute.value_for_left
-        user_profile[attribute.name]['right'] = attribute.value_for_right
+    scans = Scan.objects.filter(user=user, scan_id=scan_id)
+    for scan in scans:
+        attributes = ScanAttribute.objects.filter(scan=scan)
+        for attribute in attributes:
+            if attribute.name not in user_profile:
+                user_profile[attribute.name] = {}
+            user_profile[attribute.name][scan.model_type] = attribute.value
 
     return HttpResponse(json.dumps(user_profile))

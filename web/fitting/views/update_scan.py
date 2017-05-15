@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from fitting.models import Scan, User, ModelType
-from .utils import update_foot_scans
+from .utils import update_foot_scans, CompareScansThread
 import logging
 from web.settings import str2bool
 
@@ -31,6 +31,8 @@ def update_scan_view(request):
         user.save()
     try:
         scans = update_scan(user, scanner, scan_id, scan_type)
+        for scan in scans:
+            CompareScansThread(scan).start()
     except ValueError:
         logger.debug(f'scan {scan_id} desn`t update')
         return HttpResponseBadRequest()

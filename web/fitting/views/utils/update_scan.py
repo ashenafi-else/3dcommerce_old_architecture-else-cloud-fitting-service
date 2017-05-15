@@ -36,11 +36,11 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
     scan.save()
 
     try:
-        scan_image = ScanAttribute.objects.get(user=user, name='scan_image', scan=scan)
+        scan_image = ScanAttribute.objects.get(name='scan_image', scan=scan)
     except ScanAttribute.DoesNotExist:
-        scan_image = ScanAttribute(user=user, name='scan_image', scan=scan)
+        scan_image = ScanAttribute(name='scan_image', scan=scan)
     try:
-        update_scan_attributes(user, user.base_url, scan, scan_type)
+        update_scan_attributes(user.base_url, scan, scan_type)
         scan_image.value = get_scan_image_url(scan_path)
     except requests.HTTPError:
         logger.debug('HTTPError')

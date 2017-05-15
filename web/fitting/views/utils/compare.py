@@ -6,34 +6,11 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db import connection, transaction
 
-from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute
+from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute, Last
 from fitting_algorithm import lists_comparison
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-class CompareShoesThread(Thread):
-
-    def __init__(self, scan_id):
-        self.scan_id = scan_id
-        super(CompareShoesThread, self).__init__()
-
-    def run(self):
-        try:
-            scan = Scan.objects.get(id=self.scan_id)
-            shoes = Shoe.objects.all()
-            for shoe in shoes:
-                try:
-                    compare_scan_with_shoe(shoe, scan)
-                    logger.debug('shoe {} and scan {} are compared'.format(shoe.id, scan.id))
-                except (ValueError, KeyError):
-                    logger.debug('shoe {} and scan {} are not compared'.format(shoe.id, scan.id))
-        except Scan.DoesNotExist:
-            logger.log('Scan {} not compared'.format(self.scan_id))
-        finally:
-            logger.debug('connection for scan {} close'.format(self.scan_id))
-            connection.close()
 
 
 def compare_by_metrics(scan, last):
@@ -51,13 +28,49 @@ def compare_by_metrics(scan, last):
 
     limits = tuple((attr.left_limit_value, attr.best_value, attr.right_limit_value) for attr in last_attributes)
 
+    try:
+        compare_result = CompareResult.objects.get(
+            last=last,
+            scan_1=scan,
+            compare_type=CompareResult.TYPE_FITTING,
+            compare_mode=CompareResult.MODE_METRICS,
+        )
+    except CompareResult.DoesNotExist:
+        compare_result = CompareResult(
+            last=last,
+            scan_1=scan,
+            compare_type=CompareResult.TYPE_FITTING,
+            compare_mode=CompareResult.MODE_METRICS,
+        )
     compare_result = CompareResult(
-        last=last,
-        scan_1=scan,
         compare_result = lists_comparison(scan_metrics, last_metrics, limits),
-        compare_type=CompareResult.TYPE_FITTING,
-        compare_mode=CompareResult.MODE_METRICS,
     )
     compare_result.save()
 
     return compare_result
+
+
+compare_functions = [compare_by_metrics, ]
+
+
+class CompareScansThread(Thread):
+
+    def __init__(self, scan):
+        self.scan = scan
+        super(CompareScansThread, self).__init__()
+
+    def run(self):
+        try:
+            lasts = Last.objects.filter(model_type=self.scan.model_type)
+            for last in lasts:
+                for compare_function in compare_functions:
+                    try:
+                        compare_function(self.scan, last)
+                        logger.debug('shoe {} and scan {} are compared'.format(last, self.scan))
+                    except (ValueError, KeyError):
+                        logger.debug('shoe {} and scan {} are not compared'.format(last, self.scan))
+        except Scan.DoesNotExist:
+            logger.log('Scan {} not compared'.format(self.scan))
+        finally:
+            logger.debug('connection for scan {} close'.format(self.scan))
+            connection.close()

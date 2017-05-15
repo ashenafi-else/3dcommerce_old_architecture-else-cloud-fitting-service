@@ -38,7 +38,7 @@ def get_scan_image_url(url):
     return get_scan_image.json()['result_image_url']
 
 
-def update_scan_attributes(user, base_url, scan, scan_type):
+def update_scan_attributes(base_url, scan, scan_type):
     path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(base_url, scan.scanner, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type])
     request = requests.get(path_to_csv)
     profile = list(request.iter_lines(decode_unicode=True))[1:]
@@ -48,8 +48,8 @@ def update_scan_attributes(user, base_url, scan, scan_type):
             if key != '':
                 name = key.split('(')[0].strip()
                 try:
-                    attribute = ScanAttribute.objects.get(user=user, name=name, scan=scan)
+                    attribute = ScanAttribute.objects.get(name=name, scan=scan)
                 except ScanAttribute.DoesNotExist:
-                    attribute = ScanAttribute(user=user, name=name, scan=scan)
+                    attribute = ScanAttribute(name=name, scan=scan)
                 attribute.value = value
                 attribute.save()

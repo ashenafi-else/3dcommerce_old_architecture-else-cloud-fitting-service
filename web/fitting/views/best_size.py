@@ -12,6 +12,7 @@ compare_methods = {
     CompareResult.MODE_METRICS: compare_by_metrics
 }
 
+
 def compare_result_to_json(compare_result_left, compare_rsult_right):
 
     return {
@@ -96,6 +97,11 @@ def get_default_scan(user, scan_type):
     return scan
 
 
+scan_types_functions = {
+    ModelType.TYPE_FOOT: get_foot_best_size
+}
+
+
 @csrf_exempt
 def best_size(request):
 
@@ -108,4 +114,4 @@ def best_size(request):
     
     scans = (get_default_scan(user, ModelType.TYPE_LEFT_FOOT), get_default_scan(user, ModelType.TYPE_RIGHT_FOOT))
 
-    return HttpResponse(json.dumps(get_foot_best_size(product_uuid, scans, compare_type)))
+    return HttpResponse(json.dumps(scan_types_functions[scan_type](product_uuid, scans, compare_type)))
