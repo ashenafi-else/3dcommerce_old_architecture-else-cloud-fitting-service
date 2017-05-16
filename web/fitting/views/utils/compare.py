@@ -42,9 +42,7 @@ def compare_by_metrics(scan, last):
             compare_type=CompareResult.TYPE_FITTING,
             compare_mode=CompareResult.MODE_METRICS,
         )
-    compare_result = CompareResult(
-        compare_result = lists_comparison(scan_metrics, last_metrics, limits),
-    )
+    compare_result.compare_result = lists_comparison(scan_metrics, last_metrics, limits)
     compare_result.save()
 
     return compare_result
