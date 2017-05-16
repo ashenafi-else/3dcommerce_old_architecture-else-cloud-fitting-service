@@ -10,4 +10,6 @@ urlpatterns = [
     url(r'^user_scans', views.get_user_scans),
     url(r'^update_all_scans', views.update_all_scans),
     url(r'^update_lasts', views.update_lasts_view),
+    url(r'^set_default_scan', views.set_default_scan_view),
+    url(r'^set_default_size', views.set_default_size_view),
 ]

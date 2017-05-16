@@ -5,3 +5,5 @@ from .update_scan import update_scan_view
 from .update_all_scans import update_all_scans
 from .get_user_scans import get_user_scans
 from .update_lasts import update_lasts_view
+from .set_default_scan import set_default_scan_view
+from .set_default_size import set_default_size_view

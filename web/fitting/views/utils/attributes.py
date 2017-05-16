@@ -26,7 +26,6 @@ def get_3d_url(url):
 
 
 def get_scan_image_url(url):
-    logger.debug(url);
     get_scan_image = requests.post(
         url=f'{ELSE_3D_SERVICE_SCRIPTS_URL}stl_to_image',
         data=json.dumps({'stl_url': url, 'resolution': ['384', '683']}),

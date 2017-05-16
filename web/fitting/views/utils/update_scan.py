@@ -11,6 +11,15 @@ from .attributes import *
 STL_EXTENSION = 'stl'
 
 
+def set_default_scan(user, scan):
+
+    default_scans = user.default_scans.filter(model_type=scan.model_type)
+    for s in default_scans:
+        user.default_scans.remove(s)
+    user.default_scans.add(scan)
+    user.save()
+
+
 @transaction.atomic
 def update_scan(user, scanner, scan_id, scan_type, scan_path):
 

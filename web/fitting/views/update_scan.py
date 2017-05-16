@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from fitting.models import Scan, User, ModelType
-from .utils import update_foot_scans, CompareScansThread
+from .utils import update_foot_scans, CompareScansThread, set_default_scan
 import logging
 from web.settings import str2bool
 
@@ -39,11 +39,8 @@ def update_scan_view(request):
 
     if is_scan_default or not user.default_scans.all().exists():
         for scan in scans:
-            default_scans = user.default_scans.filter(model_type=scan.model_type)
-            for s in default_scans:
-                user.default_scans.remove(s)
-            user.default_scans.add(scan)
-        user.save()
+            set_default_scan(user, scan)
+        
 
     return HttpResponse(
         json.dumps([str(scan) for scan in scans])
