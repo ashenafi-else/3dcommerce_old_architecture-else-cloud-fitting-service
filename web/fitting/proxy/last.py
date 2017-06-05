@@ -33,6 +33,7 @@ class LastAdmin(BaseModelAdmin):
 
     fields = [
         'product',
+        'attachment',
         # 'size',
         'model_type',
     ]
@@ -42,12 +43,14 @@ class LastAdmin(BaseModelAdmin):
 
     list_display = [
         'product',
+        'attachment',
         # 'size',
         'model_type',
     ]
 
     search_fields = (
         'product',
+        'attachment',
         # 'size',
         'model_type',
     )
@@ -55,4 +58,3 @@ class LastAdmin(BaseModelAdmin):
     inlines = [
         LastAttributesInline
     ]
-

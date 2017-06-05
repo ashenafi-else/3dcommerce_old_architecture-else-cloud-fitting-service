@@ -7,3 +7,4 @@ from .get_user_scans import get_user_scans
 from .update_lasts import update_lasts_view
 from .set_default_scan import set_default_scan_view
 from .set_default_size import set_default_size_view
+from .generate_images import generate_images
