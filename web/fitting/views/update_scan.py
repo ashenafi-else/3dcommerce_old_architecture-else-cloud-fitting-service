@@ -7,6 +7,7 @@ from fitting.models import Scan, User, ModelType
 from .utils import update_foot_scans, CompareScansThread, set_default_scan
 import logging
 from web.settings import str2bool
+import sys, traceback
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ def update_scan_view(request):
             CompareScansThread(scan).start()
     except ValueError:
         logger.debug(f'scan {scan_id} desn`t update')
+        traceback.print_exc(file=sys.stdout)
         return HttpResponseBadRequest()
 
     if is_scan_default or not user.default_scans.all().exists():

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys, traceback
 from django.conf import settings
 from django.db import transaction
 from fitting.utils import gen_file_name
@@ -53,6 +54,7 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
         scan_image.value = get_scan_image_url(scan_path)
     except requests.HTTPError:
         logger.debug('HTTPError')
+        traceback.print_exc(file=sys.stdout)
 
     scan_image.save()
     # try:
