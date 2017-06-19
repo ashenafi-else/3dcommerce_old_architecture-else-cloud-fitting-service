@@ -40,8 +40,9 @@ def foot_best_style(product_uuid, user, size, compare_type):
 
     result = {}
 
-    left_last = Last.objects.filter(product__uuid=product_uuid, model_type=ModelType.TYPE_LEFT_FOOT).first()
-    right_last = Last.objects.filter(product__uuid=product_uuid, model_type=ModelType.TYPE_RIGHT_FOOT).first()
+    print(size)
+    left_last = Last.objects.filter(product__uuid=product_uuid, model_type=ModelType.TYPE_LEFT_FOOT, size=size).first()
+    right_last = Last.objects.filter(product__uuid=product_uuid, model_type=ModelType.TYPE_RIGHT_FOOT, size=size).first()
     left_scan = user.default_scans.filter(model_type=ModelType.TYPE_LEFT_FOOT).first()
     right_scan = user.default_scans.filter(model_type=ModelType.TYPE_RIGHT_FOOT).first()
     
