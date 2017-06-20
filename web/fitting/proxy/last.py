@@ -34,7 +34,7 @@ class LastAttributesInline(TabularInline):
 class LastAdmin(BaseModelAdmin):
 
     def workflow(self, obj):
-        link = '<a href="{}">{}</a>'.format(reverse('copy_last', args=(obj.pk,)), 'Copy')
+        link = '<a href="{}?increment_size=true">{}</a>'.format(reverse('copy_last', args=(obj.pk,)), 'Copy and incremet size')
         return format_html(
             '<span>'+link+'</span>'
         )
