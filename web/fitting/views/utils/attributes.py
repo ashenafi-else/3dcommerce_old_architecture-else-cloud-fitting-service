@@ -45,7 +45,7 @@ def update_scan_attributes(base_url, scan, scan_type):
     for row in csv.DictReader(profile, delimiter=';'):
         for key, value in row.items():
             if key != '':
-                name = key.split('(')[0].strip()
+                name = key.strip()
                 try:
                     attribute = ScanAttribute.objects.get(name=name, scan=scan)
                 except ScanAttribute.DoesNotExist:

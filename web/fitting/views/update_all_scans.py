@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from fitting.models import Scan, User, ScanAttribute, ModelType
 from .utils.update_scan import update_scan
 import logging
+import requests
 import json
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ def update_all_scans(request):
                 scan_type=scan.model_type,
                 scan_path=urls_to_scans[scan.model_type](user.base_url, scan.scanner, scan.scan_id)
             )
-        except (User.DoesNotExist, ValueError):
+        except Exception as e:
             logger.debug('scan {} does not update!'.format(scan))
-            not_updated.append(str(scan))
+            not_updated.append(f'{scan.scan_id}: {e}')
     return HttpResponse(json.dumps({'not_updated': not_updated}))
