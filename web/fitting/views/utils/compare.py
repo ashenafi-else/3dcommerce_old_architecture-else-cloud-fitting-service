@@ -13,20 +13,31 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def compare_by_metrics(scan, last):
+def compare_by_metrics(scan, product):
 
-    last_attributes = LastAttribute.objects.filter(last=last, disabled=False)
-    scan_metrics = []
-    last_metrics = []
+    lasts = Last.objects.filter(product=product)
+    metrics = {}
 
-    for last_attribute in last_attributes:
+    for last in lasts:
 
-        scan_attribute = ScanAttribute.objects.filter(scan=scan, name=last_attribute.scan_attribute_name).first()
-        if scan_attribute is not None:
-            scan_metrics.append(float(scan_attribute.value))
-            last_metrics.append(float(last_attribute.value))
+        last_attributes = LastAttribute.objects.filter(last=last, disabled=False)
 
-    limits = tuple((attr.left_limit_value, attr.best_value, attr.right_limit_value) for attr in last_attributes)
+        for last_attribute in last_attributes:
+
+            scan_attribute = ScanAttribute.objects.filter(scan=scan, name=last_attribute.scan_attribute_name).first()
+
+            if last_attribute.name not in metrics:
+                metrics[last_attribute.name] = {
+                    'scan': scan_attribute.value,
+                    'lasts': []
+                }
+
+            if scan_attribute is not None:
+                if scan
+                scan_metrics.append(float(scan_attribute.value))
+                last_metrics.append(float(last_attribute.value))
+
+        limits = tuple((attr.left_limit_value, attr.best_value, attr.right_limit_value) for attr in last_attributes)
 
     try:
         compare_result = CompareResult.objects.get(
