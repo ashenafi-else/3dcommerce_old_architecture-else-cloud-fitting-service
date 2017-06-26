@@ -1,6 +1,8 @@
 from django.contrib.admin.options import TabularInline
 from ..models import LastAttribute, Last
 from .base_models_admin import BaseModelAdmin
+from django.utils.html import format_html
+from django.urls import reverse
 
 
 class LastProxy(Last):
@@ -31,27 +33,37 @@ class LastAttributesInline(TabularInline):
 
 class LastAdmin(BaseModelAdmin):
 
+    def workflow(self, obj):
+        link = '<a href="{}?increment_size=true">{}</a>'.format(reverse('copy_last', args=(obj.pk,)), 'Copy and incremet size')
+        return format_html(
+            '<span>'+link+'</span>'
+        )
+    workflow.boolean = False
+    workflow.short_description = 'Action'
+
     fields = [
+        'workflow',
         'product',
         'attachment',
-        # 'size',
+        'size',
         'model_type',
     ]
 
     readonly_fields = [
+        'workflow'
     ]
 
     list_display = [
         'product',
-        'attachment',
-        # 'size',
+        'size',
         'model_type',
+        'workflow',
     ]
 
     search_fields = (
         'product',
-        'attachment',
-        # 'size',
+        'product__uuid',
+        'size__value',
         'model_type',
     )
 

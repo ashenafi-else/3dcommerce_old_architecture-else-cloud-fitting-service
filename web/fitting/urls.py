@@ -13,4 +13,6 @@ urlpatterns = [
     url(r'^set_default_scan', views.set_default_scan_view),
     url(r'^set_default_size', views.set_default_size_view),
     url(r'^generate_images', views.generate_images),
+    url(r'^copy_last/(?P<pk>[0-9]+)/$', views.copy_last, name='copy_last',),
+    url(r'^create_user', views.create_user),
 ]

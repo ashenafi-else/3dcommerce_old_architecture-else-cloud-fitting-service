@@ -1,16 +1,12 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
-from fitting.models import Scan, User, CompareResult, Last, ModelType
+from fitting.models import Scan, User, CompareResult, Last, ModelType, Product
 from .utils import compare_by_metrics
 from django.utils.datastructures import MultiValueDictKeyError
 import logging
 
 logger = logging.getLogger(__name__)
-
-compare_methods = {
-    CompareResult.MODE_METRICS: compare_by_metrics
-}
 
 
 def compare_result_to_json(compare_result_left, compare_rsult_right):
@@ -23,24 +19,26 @@ def compare_result_to_json(compare_result_left, compare_rsult_right):
     }
 
 
-def get_foot_best_size(product_uuid, scans, compare_type):
+def get_foot_best_size(product, scans):
 
     best_size_result = CompareResult.MIN
     best_size = None
     lasts = zip(
-        Last.objects.filter(product__uuid=product_uuid, model_type=scans[0].model_type),
-        Last.objects.filter(product__uuid=product_uuid, model_type=scans[1].model_type)
+        Last.objects.filter(product=product, model_type=scans[0].model_type),
+        Last.objects.filter(product=product, model_type=scans[1].model_type)
     )
 
     for pair in lasts:
         try:
             compare_result_left = CompareResult.objects.get(last=pair[0], scan_1=scans[0])
         except CompareResult.DoesNotExist:
-            compare_result_left = compare_methods[compare_type](scans[0], pair[0])
+            compare_by_metrics(scans, product)
+            compare_result_left = CompareResult.objects.get(last=pair[0], scan_1=scans[0])
         try:
             compare_result_right = CompareResult.objects.get(last=pair[1], scan_1=scans[1])
         except CompareResult.DoesNotExist:
-            compare_result_right = compare_methods[compare_type](scans[1], pair[1])
+            compare_by_metrics(scans, product)
+            compare_result_right = CompareResult.objects.get(last=pair[1], scan_1=scans[1])
 
         average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
 
@@ -49,31 +47,31 @@ def get_foot_best_size(product_uuid, scans, compare_type):
             best_size = pair[0].size
 
     prev_best_size_result_left = CompareResult.objects.filter(
-        last__product__uuid=product_uuid,
+        last__product=product,
         last__size__numeric_value__lt=best_size.numeric_value,
         scan_1=scans[0]
     ).order_by('last__size__numeric_value').last()
     prev_best_size_result_right = CompareResult.objects.filter(
-        last__product__uuid=product_uuid,
+        last__product=product,
         last__size__numeric_value__lt=best_size.numeric_value,
         scan_1=scans[1]
     ).order_by('last__size__numeric_value').last()
 
     next_best_size_result_left = CompareResult.objects.filter(
-        last__product__uuid=product_uuid,
+        last__product=product,
         last__size__numeric_value__gt=best_size.numeric_value,
         scan_1=scans[0]
     ).order_by('last__size__numeric_value').first()
     next_best_size_result_right = CompareResult.objects.filter(
-        last__product__uuid=product_uuid,
+        last__product=product,
         last__size__numeric_value__gt=best_size.numeric_value,
         scan_1=scans[1]
     ).order_by('last__size__numeric_value').first()
     
     result = {
         'best_size': compare_result_to_json(
-            CompareResult.objects.filter(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type).first(),
-            CompareResult.objects.filter(last__product__uuid=product_uuid, last__size=best_size, last__model_type=scans[0].model_type).first()
+            CompareResult.objects.filter(last__product=product, last__size=best_size, last__model_type=scans[0].model_type).first(),
+            CompareResult.objects.filter(last__product=product, last__size=best_size, last__model_type=scans[1].model_type).first()
         )
     }
 
@@ -110,8 +108,8 @@ def best_size(request):
     user = User.objects.get(uuid=user_uuid)
 
     scan_type = request.GET.get('scan_type', ModelType.TYPE_FOOT)
-    compare_type = request.GET.get('compare_type', CompareResult.MODE_METRICS)
     
+    product = Product.objects.get(uuid=product_uuid)
     scans = (get_default_scan(user, ModelType.TYPE_LEFT_FOOT), get_default_scan(user, ModelType.TYPE_RIGHT_FOOT))
 
-    return HttpResponse(json.dumps(scan_types_functions[scan_type](product_uuid, scans, compare_type)))
+    return HttpResponse(json.dumps(scan_types_functions[scan_type](product, scans)))
