@@ -8,6 +8,7 @@ from . import upload
 from fitting.models import Scan, ScanAttribute
 from pathlib import Path
 from .attributes import *
+from blender_scripts.worker import execute_blender_script
 
 STL_EXTENSION = 'stl'
 
@@ -19,6 +20,48 @@ def set_default_scan(user, scan):
         user.default_scans.remove(s)
     user.default_scans.add(scan)
     user.save()
+
+def create_file(file_name):
+    file_path = os.path.join(
+        os.sep,
+        settings.MEDIA_ROOT,
+        file_name
+    )
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    Path(file_path).touch()
+    return file_path
+
+
+def create_scan_3d(scan):
+    BLENDER_EXTENSION = 'blend'
+    scan_3d = ScanAttribute(name='scan_3d', scan=scan)
+    blender_file_name = gen_file_name(scan, '{}.{}'.format(scan.model_type, BLENDER_EXTENSION))
+    blender_file_path = create_file(blender_file_name)
+
+    execute_blender_script(
+        script='stl_to_blend.py',
+        out_file=blender_file_path,
+        params=[scan.attachment.path],
+    )
+    execute_blender_script(
+        script='prepare_scan.py',
+        in_file=blender_file_path,
+    )
+
+    json_file_name = gen_file_name(scan, '{}.{}'.format(scan.model_type, 'json'))
+    json_file_path = create_file(json_file_name)
+
+    execute_blender_script(
+        script='blend4web_json.py',
+        in_file=blender_file_path,
+        out_file=json_file_path,
+    )
+    if os.path.exists(blender_file_path):
+        os.remove(blender_file_path)
+    if os.path.exists(blender_file_path + '1'):
+        os.remove(blender_file_path + '1')
+    scan_3d.value = '/'.join([settings.PROXY_HOST] + json_file_path.split('/')[2:])
+    scan_3d.save()
 
 
 @transaction.atomic
@@ -33,13 +76,7 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
     scan.scanner = scanner
     foot_attachment_content = upload(scan_path)
     attachment_name = gen_file_name(scan, '{}.{}'.format(scan_type, STL_EXTENSION))
-    attachment_path = os.path.join(
-        os.sep,
-        settings.MEDIA_ROOT,
-        attachment_name
-    )
-    os.makedirs(os.path.dirname(attachment_path), exist_ok=True)
-    Path(attachment_path).touch()
+    attachment_path = create_file(attachment_name)
     Path(attachment_path).write_bytes(foot_attachment_content)
     
     scan.attachment = attachment_name
@@ -57,15 +94,8 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
         traceback.print_exc(file=sys.stdout)
 
     scan_image.save()
-    # try:
-    #     scan_3d = Attribute.objects.get(user=user, name='scan_3d', scan=scan)
-    # except Attribute.DoesNotExist:
-    #     scan_3d = Attribute(user_id=user, name='scan_3d', scan=scan)
-    # try:
-    # 	scan_3d.value = get_3d_url(scan_path)
-    # except requests.HTTPError:
-    #     logger.debug('HTTPError')
-    # scan_3d.save()
+    create_scan_3d(scan)
+
     # CompareShoesThread(scan).start()
 
     return scan

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'fitting',
     'fitting_algorithm',
+    'blender_scripts',
 ]
 
 MIDDLEWARE = [
@@ -171,6 +172,8 @@ EMAIL_PORT = 25
 EMAIL_HOST_USER = "orders@else.shoes"
 EMAIL_HOST_PASSWORD = 'FD.8673_DSW'
 EMAIL_USE_SSL = False
+
+PROXY_HOST = 'https://elseware.else.shoes'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

@@ -38,9 +38,18 @@ RUN rm -rf PyMesh
 ADD ./requirements.txt /www/requirements.txt
 RUN pip install -r requirements.txt
 
-RUN apt-get update && apt-get install -y \
-unzip \
-&& apt-get clean
+RUN apt-get update && \
+	apt-get install -y \
+		curl \
+		bzip2 \
+		libfreetype6 \
+		libgl1-mesa-dev \
+		libglu1-mesa \
+		libxi6 \
+		unzip \
+		libxrender1 && \
+	apt-get -y autoremove && \
+	rm -rf /var/lib/apt/lists/*
 
 ENV BLENDER_PATH /usr/local/blender
 

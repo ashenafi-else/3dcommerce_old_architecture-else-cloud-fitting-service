@@ -45,6 +45,7 @@ class LastAdmin(BaseModelAdmin):
         'workflow',
         'product',
         'size',
+        'attachment',
         'model_type',
     ]
 
@@ -56,6 +57,7 @@ class LastAdmin(BaseModelAdmin):
         'product',
         'size',
         'model_type',
+        'attachment',
         'workflow',
     ]
 

@@ -39,6 +39,7 @@ class ScanAdmin(BaseModelAdmin):
         'scan_id',
         'scanner',
         'model_type',
+        'attachment',
         'created_date',
     ]
 
@@ -51,6 +52,7 @@ class ScanAdmin(BaseModelAdmin):
         'scan_id',
         'scanner',
         'model_type',
+        'attachment',
         'created_date',
     ]
 
