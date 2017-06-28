@@ -49,9 +49,10 @@ def best_scan(request):
     scan_type = request.GET.get('type', ModelType.TYPE_FOOT)
     user = User.objects.get(uuid=user_uuid)
 
-    user_best_scan, user_best_scan_dist, metrics_count = find_best_scan[scan_type](user)
+    user_best_scan, user_best_scan_dist, scans_count, metrics_count = find_best_scan[scan_type](user)
 
     return HttpResponse(json.dumps({'scan_id': user_best_scan,
                                     'distance': user_best_scan_dist,
+                                    'scans_processed': scans_count,
                                     'metrics_count': metrics_count
                                     }))
