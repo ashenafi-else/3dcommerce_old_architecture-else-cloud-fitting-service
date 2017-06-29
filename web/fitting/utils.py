@@ -10,6 +10,14 @@ attachment_path = {
 				filename
 			]
 		),
+	'LastProxy': lambda instance, filename: os.path.sep.join(
+			[
+				'Last',
+				instance.product.uuid,
+				str(instance.size),
+				filename
+			]
+		),
 	'Scan': lambda instance, filename: os.path.sep.join(
 			[
 				instance.__class__.__name__,
