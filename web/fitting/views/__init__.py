@@ -11,3 +11,4 @@ from .set_default_size import set_default_size_view
 from .generate_images import generate_images
 from .copy_last import copy_last
 from .create_user import create_user
+from .generate_comparison_config import generate_comparison_config

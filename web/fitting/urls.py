@@ -16,4 +16,5 @@ urlpatterns = [
     url(r'^generate_images', views.generate_images),
     url(r'^copy_last/(?P<pk>[0-9]+)/$', views.copy_last, name='copy_last',),
     url(r'^create_user', views.create_user),
+    url(r'^generate_comparison_config', views.generate_comparison_config),
 ]
