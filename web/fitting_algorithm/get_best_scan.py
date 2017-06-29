@@ -1,23 +1,13 @@
+"""finding best_scan (best quality scan from set)"""
+
 import math
 import logging
+from .helpers.math_helpers import get_median
 
 logger = logging.getLogger(__name__)
 
 
 def get_best_scan(scans):
-
-    def get_median(list):
-
-        if len(list) > 0:
-            sorted_list = sorted(list)
-
-            count = len(sorted_list)
-            if count % 2 == 0:
-                center = count // 2
-                return (sorted_list[center] + sorted_list[center - 1]) / 2
-            else:
-                center = count // 2
-                return sorted_list[center]
 
     paired_scans_ids = [scan for scan in scans if 'LEFT' in scans[scan] and 'RIGHT' in scans[scan]]
 
