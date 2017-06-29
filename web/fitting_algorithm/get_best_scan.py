@@ -35,8 +35,6 @@ def get_best_scan(scans):
     best_scan_id = ''
     best_scan_distance = float("inf")
 
-    logger.log(100, metrics)
-
     if len(metrics) > 0:
         for scan in paired_scans_ids:
             scan_left_distance = 0
