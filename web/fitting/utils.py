@@ -26,6 +26,14 @@ attachment_path = {
 				filename
 			]
 		),
+	'CompareResult': lambda instance, filename: os.path.sep.join(
+			[
+				instance.__class__.__name__,
+				str(instance.id),
+				'{}-{}-{}'.format(datetime.now().year, datetime.now().month, datetime.now().day),
+				filename
+			]
+		),
 }
 
 

@@ -1,4 +1,6 @@
 from django.db import models
+from django.dispatch import receiver
+import os
 
 
 class CompareResult(models.Model):
@@ -44,3 +46,9 @@ class CompareResult(models.Model):
 
 	def __str__(self):
 		return f'last: {self.last}, scan_1: {self.scan_1}, scan_2: {self.scan_2}, result: {self.compare_result}'
+
+@receiver(models.signals.post_delete, sender=CompareResult)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    if instance.output_model:
+        if os.path.isfile(instance.output_model):
+            os.remove(instance.output_model)

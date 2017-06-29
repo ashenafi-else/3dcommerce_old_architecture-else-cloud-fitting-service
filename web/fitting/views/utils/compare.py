@@ -6,9 +6,15 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db import connection, transaction
 
-from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute, Last
+from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute, Last, Product
 from fitting_algorithm import get_metrics_by_sizes
+from fitting.utils import gen_file_name
+from blender_scripts.worker import execute_blender_script
+from django.conf import settings
+from pathlib import Path
+
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +49,33 @@ def get_compare_result(scan, lasts):
     return get_metrics_by_sizes(scan_data, [(size, metrics[0], metrics[1]) for size, metrics in lasts_data.items()])
 
 
-def compare_by_metrics(scans, product):
+@transaction.atomic
+def compare_by_metrics(scan, product):
+
+    def create_file(file_name):
+        file_path = os.path.join(
+            os.sep,
+            settings.MEDIA_ROOT,
+            file_name
+        )
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        Path(file_path).touch()
+        return file_path
+
+
+    def create_fitting_visualization(compare_instance):
+        logger.debug(compare_instance.last.attachment.path)
+        image_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.png')
+        image_file_path = create_file(image_file_name)
+        execute_blender_script(
+            script='fitting_visualization.py',
+            out_file=image_file_path,
+            params=[compare_instance.last.attachment.path, compare_instance.scan_1.attachment.path],
+        )
+        
+        compare_instance.output_model = '/'.join([settings.PROXY_HOST] + image_file_path.split('/')[2:])
+        compare_instance.save()
+
 
     def save_results(scan, lasts, results):
 
@@ -67,15 +99,12 @@ def compare_by_metrics(scans, product):
                 )
             compare_result.compare_result = result[1]
             compare_result.save()
-
-    left_lasts = Last.objects.filter(product=product, model_type=scans[0].model_type)
-    right_lasts = Last.objects.filter(product=product, model_type=scans[1].model_type)
-
-    compare_for_left = get_compare_result(scans[0], left_lasts)
-    save_results(scans[0], left_lasts, compare_for_left)
-    compare_for_right = get_compare_result(scans[1], right_lasts)
-    save_results(scans[1], right_lasts, compare_for_right)
-
+            if scan.attachment and last.attachment:
+                create_fitting_visualization(compare_result)
+            
+    lasts = Last.objects.filter(product=product, model_type=scan.model_type)
+    compare = get_compare_result(scan, lasts)
+    save_results(scan, lasts, compare)
 
 compare_functions = [compare_by_metrics, ]
 
@@ -93,9 +122,9 @@ class CompareScansThread(Thread):
                 for compare_function in compare_functions:
                     try:
                         compare_function(self.scan, product)
-                        logger.debug('shoe {} and scan {} are compared'.format(last, self.scan))
-                    except (ValueError, KeyError):
-                        logger.debug('shoe {} and scan {} are not compared'.format(last, self.scan))
+                        logger.debug('shoe {} and scan {} are compared'.format(product, self.scan))
+                    except Exception as e:
+                        logger.debug('shoe {} and scan {} are not compared'.format(product, self.scan))
         except Scan.DoesNotExist:
             logger.log('Scan {} not compared'.format(self.scan))
         finally:

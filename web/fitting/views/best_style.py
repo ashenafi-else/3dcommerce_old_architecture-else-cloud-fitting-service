@@ -45,7 +45,8 @@ def foot_best_style(product, user, size, compare_type):
         left_result = get_best_style(left_scan, left_last, compare_type)
         right_result = get_best_style(right_scan, right_last, compare_type)
     except CompareResult.DoesNotExist:
-        compare_methods[compare_type]((left_scan, right_scan), product)
+        compare_methods[compare_type](left_scan, product)
+        compare_methods[compare_type](right_scan, product)
         left_result = get_best_style(left_scan, left_last, compare_type)
         right_result = get_best_style(right_scan, right_last, compare_type)
 

@@ -33,7 +33,6 @@ def get_user_scans(request):
     user_uuid = request.GET['user']
     scan_type = request.GET.get('type', ModelType.TYPE_FOOT)
     user = User.objects.get(uuid=user_uuid)
-    scans = Scan.objects.filter(user=user)
     user_scans = list(get_scans[scan_type](user))
     
     return HttpResponse(json.dumps({'user_scans': user_scans}))

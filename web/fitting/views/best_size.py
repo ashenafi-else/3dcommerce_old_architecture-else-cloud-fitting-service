@@ -32,12 +32,12 @@ def get_foot_best_size(product, scans):
         try:
             compare_result_left = CompareResult.objects.get(last=pair[0], scan_1=scans[0])
         except CompareResult.DoesNotExist:
-            compare_by_metrics(scans, product)
+            compare_by_metrics(scans[0], product)
             compare_result_left = CompareResult.objects.get(last=pair[0], scan_1=scans[0])
         try:
             compare_result_right = CompareResult.objects.get(last=pair[1], scan_1=scans[1])
         except CompareResult.DoesNotExist:
-            compare_by_metrics(scans, product)
+            compare_by_metrics(scans[1], product)
             compare_result_right = CompareResult.objects.get(last=pair[1], scan_1=scans[1])
 
         average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2

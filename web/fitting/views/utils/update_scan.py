@@ -32,9 +32,10 @@ def create_file(file_name):
     return file_path
 
 
-def create_scan_3d(scan):
+def create_scan_visualization(scan):
     BLENDER_EXTENSION = 'blend'
     scan_3d = ScanAttribute(name='scan_3d', scan=scan)
+    scan_image = ScanAttribute(name='scan_image', scan=scan)
     blender_file_name = gen_file_name(scan, '{}.{}'.format(scan.model_type, BLENDER_EXTENSION))
     blender_file_path = create_file(blender_file_name)
 
@@ -48,6 +49,18 @@ def create_scan_3d(scan):
         in_file=blender_file_path,
     )
 
+    image_file_name = gen_file_name(scan, '{}.{}'.format(scan.model_type, 'png'))
+    image_file_path = create_file(image_file_name)
+
+    execute_blender_script(
+        script='generate_image.py',
+        in_file=blender_file_path,
+        out_file=image_file_path,
+        params=['768', '1366'],
+    )
+    scan_image.value = '/'.join([settings.PROXY_HOST] + image_file_path.split('/')[2:])
+    scan_image.save()
+    
     json_file_name = gen_file_name(scan, '{}.{}'.format(scan.model_type, 'json'))
     json_file_path = create_file(json_file_name)
 
@@ -56,6 +69,7 @@ def create_scan_3d(scan):
         in_file=blender_file_path,
         out_file=json_file_path,
     )
+
     if os.path.exists(blender_file_path):
         os.remove(blender_file_path)
     if os.path.exists(blender_file_path + '1'):
@@ -84,17 +98,15 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
 
     ScanAttribute.objects.filter(scan=scan).delete()
 
-    scan_image = ScanAttribute(name='scan_image', scan=scan)
     
     try:
         update_scan_attributes(user.base_url, scan, scan_type)
-        scan_image.value = get_scan_image_url(scan_path)
     except requests.HTTPError:
         logger.debug('HTTPError')
         traceback.print_exc(file=sys.stdout)
 
-    scan_image.save()
-    create_scan_3d(scan)
+    if scan.attachment:
+        create_scan_visualization(scan)
 
     # CompareShoesThread(scan).start()
 
