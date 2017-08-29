@@ -68,11 +68,12 @@ def compare_by_metrics(scan, product):
         image_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.png')
         image_file_path = create_file(image_file_name)
         execute_blender_script(
-            script='fitting_visualization.py',
+            script='new_fitting_visualisation.py',
+            in_file='.../blender_scripts/environments/transparent_environment.blend'
             out_file=image_file_path,
             params=[compare_instance.last.attachment.path, compare_instance.scan_1.attachment.path],
         )
-        
+
         compare_instance.output_model = '/'.join([settings.PROXY_HOST] + image_file_path.split('/')[2:])
         compare_instance.save()
 
@@ -101,7 +102,7 @@ def compare_by_metrics(scan, product):
             compare_result.save()
             if scan.attachment and last.attachment:
                 create_fitting_visualization(compare_result)
-            
+
     lasts = Last.objects.filter(product=product, model_type=scan.model_type)
     compare = get_compare_result(scan, lasts)
     save_results(scan, lasts, compare)
