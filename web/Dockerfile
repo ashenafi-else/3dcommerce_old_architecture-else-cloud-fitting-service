@@ -35,10 +35,10 @@ RUN ./setup.py build && ./setup.py install && rm -rf build third_party/build && 
 WORKDIR /www
 RUN rm -rf PyMesh
 
-ADD ./fitting/blender_scripts/environments/transparent_environment.blend /www/transparent_environment.blend
-
 ADD ./requirements.txt /www/requirements.txt
 RUN pip install -r requirements.txt
+
+ADD ./transparent_environment.blend /www/transparent_environment.blend
 
 RUN apt-get update && \
 	apt-get install -y \
