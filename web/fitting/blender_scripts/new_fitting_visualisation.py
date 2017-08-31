@@ -20,6 +20,10 @@ print("Will be using:")
 print("model: {0}".format(model_file_path))
 print("scan: {0}".format(scan_file_path))
 
+if 'blend4web' not in bpy.context.user_preferences.addons:
+    bpy.ops.wm.addon_enable(module='blend4web')
+    bpy.ops.wm.save_userpref()
+
 # ------------------------------------------------------------------------------
 # FUNCTIONS
 
