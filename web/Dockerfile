@@ -35,6 +35,8 @@ RUN ./setup.py build && ./setup.py install && rm -rf build third_party/build && 
 WORKDIR /www
 RUN rm -rf PyMesh
 
+ADD ./fitting/blender_scripts/environments/transparent_environment.blend /www/transparent_environment.blend
+
 ADD ./requirements.txt /www/requirements.txt
 RUN pip install -r requirements.txt
 
@@ -74,4 +76,3 @@ ENV BLEND4WEB_PATH $BLENDER_PATH/$BLENDER_MAJOR/scripts/addons
 RUN curl -SL "$BLEND4WEB_ZIP_URL" -o blend4web_addon.zip && \
 	unzip -o blend4web_addon.zip -d $BLEND4WEB_PATH && \
 	rm blend4web_addon.zip
-
