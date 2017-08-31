@@ -69,7 +69,7 @@ def compare_by_metrics(scan, product):
         image_file_path = create_file(image_file_name)
         execute_blender_script(
             script='new_fitting_visualisation.py',
-            in_file='transparent_environment.blend',
+            in_file='/www/transparent_environment.blend',
             out_file=image_file_path,
             params=[compare_instance.last.attachment.path, compare_instance.scan_1.attachment.path],
         )
