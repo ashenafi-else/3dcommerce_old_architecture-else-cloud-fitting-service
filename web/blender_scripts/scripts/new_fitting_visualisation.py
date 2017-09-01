@@ -141,7 +141,7 @@ def render_image(camera, resolution, file_name, multiplier=1):
     :type file_name: string
     :param multiplier: resolution multiplier
     :type multiplier: int
-    """      
+    """
     bpy.context.scene.camera = camera
     bpy.context.scene.render.resolution_x = int(resolution[0]) * multiplier
     bpy.context.scene.render.resolution_y = int(resolution[1]) * multiplier
@@ -271,7 +271,7 @@ def generate_comparison_image(model_path, scan_path, output_path):
 
     # render image
     camera = bpy.data.objects["cameraTOP"]
-    render_image(camera, (1920, 1080), output_path)
+    render_image(camera, (1080, 1920), output_path)
 
 
 generate_comparison_image(model_file_path, scan_file_path, output_file_path)
