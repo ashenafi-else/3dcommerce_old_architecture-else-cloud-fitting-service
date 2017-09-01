@@ -12,7 +12,8 @@ else:
     argv = []
 
 
-output_file_path = argv[0]
+output_image_file_path = argv[0]
+output_json_file_path = output_image_file_path.replace('.png', '.json')
 model_file_path = argv[1]
 scan_file_path = argv[2]
 
@@ -273,5 +274,5 @@ def generate_comparison_image(model_path, scan_path, output_path):
     camera = bpy.data.objects["cameraTOP"]
     render_image(camera, (1920, 1080), output_path)
 
-
-generate_comparison_image(model_file_path, scan_file_path, output_file_path)
+generate_comparison_image(model_file_path, scan_file_path, output_image_file_path)
+bpy.ops.export_scene.b4w_json(filepath=output_json_file_path, do_autosave=False, save_export_path=False)

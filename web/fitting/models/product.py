@@ -5,6 +5,7 @@ from django.dispatch import receiver
 
 class Product(Attachment):
     uuid = models.CharField(max_length=256)
+    brand_id = models.IntegerField(default=1)
 
     def __str__(self):
         return self.uuid

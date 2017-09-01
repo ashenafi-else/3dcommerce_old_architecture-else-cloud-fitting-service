@@ -13,6 +13,7 @@ from blender_scripts.worker import execute_blender_script
 from django.conf import settings
 from pathlib import Path
 
+import sys, traceback
 import logging
 import os
 
@@ -45,7 +46,6 @@ def get_compare_result(scan, lasts):
             else:
                 lasts_data[lasts_attribute.last.size.value][0].append(float(lasts_attribute.value))
                 lasts_data[lasts_attribute.last.size.value][1].append(ranges)
-
     return get_metrics_by_sizes(scan_data, [(size, metrics[0], metrics[1]) for size, metrics in lasts_data.items()])
 
 
@@ -67,6 +67,8 @@ def compare_by_metrics(scan, product):
         logger.debug(compare_instance.last.attachment.path)
         image_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.png')
         image_file_path = create_file(image_file_name)
+        json_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.json')
+        json_file_path = create_file(json_file_name)
         execute_blender_script(
             script='new_fitting_visualisation.py',
             in_file='/www/transparent_environment.blend',
@@ -75,23 +77,27 @@ def compare_by_metrics(scan, product):
         )
 
         compare_instance.output_model = '/'.join([settings.PROXY_HOST] + image_file_path.split('/')[2:])
+        compare_instance.output_model_3d = '/'.join([settings.PROXY_HOST] + json_file_path.split('/')[2:])
         compare_instance.save()
 
 
     def save_results(scan, lasts, results):
 
+        best_result = CompareResult(
+            compare_result=0
+        )
         for result in results:
 
             last = lasts.filter(size__value=result[0]).first()
 
-            try:
-                compare_result = CompareResult.objects.get(
-                    scan_1=scan,
-                    last=last,
-                    compare_type=CompareResult.TYPE_FITTING,
-                    compare_mode=CompareResult.MODE_METRICS
-                )
-            except CompareResult.DoesNotExist:
+            compare_result = CompareResult.objects.filter(
+                scan_1=scan,
+                last=last,
+                compare_type=CompareResult.TYPE_FITTING,
+                compare_mode=CompareResult.MODE_METRICS
+            ).first()
+
+            if compare_result is None:
                 compare_result = CompareResult(
                     scan_1=scan,
                     last=last,
@@ -100,8 +106,10 @@ def compare_by_metrics(scan, product):
                 )
             compare_result.compare_result = result[1]
             compare_result.save()
-            if scan.attachment and last.attachment:
-                create_fitting_visualization(compare_result)
+            if compare_result.compare_result > best_result.compare_result:
+                best_result = compare_result
+        if best_result.last.attachment and best_result.scan_1.attachment:
+            create_fitting_visualization(best_result)
 
     lasts = Last.objects.filter(product=product, model_type=scan.model_type)
     compare = get_compare_result(scan, lasts)
@@ -112,19 +120,20 @@ compare_functions = [compare_by_metrics, ]
 
 class CompareScansThread(Thread):
 
-    def __init__(self, scan):
-        self.scan = scan
+    def __init__(self, scan, products):
+        self.scan = scan     
+        self.products = products
         super(CompareScansThread, self).__init__()
 
     def run(self):
         try:
-            products = Product.objects.all()
-            for product in products:
+            for product in self.products:
                 for compare_function in compare_functions:
                     try:
                         compare_function(self.scan, product)
                         logger.debug('shoe {} and scan {} are compared'.format(product, self.scan))
                     except Exception as e:
+                        traceback.print_exc(file=sys.stdout)
                         logger.debug('shoe {} and scan {} are not compared'.format(product, self.scan))
         except Scan.DoesNotExist:
             logger.log('Scan {} not compared'.format(self.scan))

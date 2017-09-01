@@ -29,6 +29,7 @@ class CompareResult(models.Model):
 	scan_2 = models.ForeignKey('Scan', related_name='scan_2', null=True, blank=True)
 	compare_result = models.FloatField()
 	output_model = models.CharField(max_length=1000, blank=True)
+	output_model_3d = models.CharField(max_length=1000, blank=True)
 	compare_type = models.CharField(
 		max_length=64,
 		choices=TYPES,

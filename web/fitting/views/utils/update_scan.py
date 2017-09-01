@@ -104,11 +104,8 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
     except requests.HTTPError:
         logger.debug('HTTPError')
         traceback.print_exc(file=sys.stdout)
-
     if scan.attachment:
         create_scan_visualization(scan)
-
-    # CompareShoesThread(scan).start()
 
     return scan
 

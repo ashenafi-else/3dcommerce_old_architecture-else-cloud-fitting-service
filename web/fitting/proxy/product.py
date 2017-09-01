@@ -77,6 +77,7 @@ class ProductAdmin(BaseModelAdmin):
 
     fields = [
         'uuid',
+        'brand_id',
         'attachment',
     ]
 
@@ -85,11 +86,13 @@ class ProductAdmin(BaseModelAdmin):
 
     list_display = [
         'uuid',
+        'brand_id',
         'attachment',
     ]
 
     search_fields = (
         'uuid',
+        'brand_id',
     )
 
     inlines = [
