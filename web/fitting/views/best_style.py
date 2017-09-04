@@ -15,10 +15,11 @@ def get_best_style(scan, last, compare_type):
     result = {}
 
     if last and scan:
-        best_style = CompareResult.objects.get(last=last, scan_1=scan)
+        best_style = CompareResult.objects.filter(last=last, scan_1=scan).first()
         result['best_style'] = {
             'score': int(best_style.compare_result),
             'output_model': best_style.output_model,
+            'output_model_3d': best_style.output_model_3d,
             'size': best_style.last.size.value,
             'size_type': best_style.last.size.model_type
         }
@@ -26,6 +27,7 @@ def get_best_style(scan, last, compare_type):
         result['best_style'] = {
             'score': 0,
             'output_model': '',
+            'output_model_3d': '',
             'size': None,
             'size_type': None
         }
@@ -54,6 +56,7 @@ def foot_best_style(product, user, size, compare_type):
         result['best_style'] = {
             'score': (left_result['best_style']['score'] + right_result['best_style']['score']) // 2,
             'output_model': left_result['best_style']['output_model'],
+            'output_model_3d': left_result['best_style']['output_model_3d'],
             'size': left_result['best_style']['size'],
             'size_type': left_result['best_style']['size_type']
         }

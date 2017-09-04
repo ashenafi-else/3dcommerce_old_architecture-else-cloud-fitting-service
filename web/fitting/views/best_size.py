@@ -14,6 +14,7 @@ def compare_result_to_json(compare_result_left, compare_rsult_right):
     return {
         'score': int((compare_result_left.compare_result + compare_rsult_right.compare_result) / 2),
         'output_model': compare_result_left.output_model,
+        'output_model_3d': compare_result_left.output_model_3d,
         'size': compare_result_left.last.size.value,
         'size_type': compare_result_left.last.size.model_type
     }
@@ -29,16 +30,14 @@ def get_foot_best_size(product, scans):
     )
 
     for pair in lasts:
-        try:
-            compare_result_left = CompareResult.objects.get(last=pair[0], scan_1=scans[0])
-        except CompareResult.DoesNotExist:
+        compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
+        if compare_result_left is None:
             compare_by_metrics(scans[0], product)
-            compare_result_left = CompareResult.objects.get(last=pair[0], scan_1=scans[0])
-        try:
-            compare_result_right = CompareResult.objects.get(last=pair[1], scan_1=scans[1])
-        except CompareResult.DoesNotExist:
+            compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
+        compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=scans[1]).first()
+        if compare_result_right is None:
             compare_by_metrics(scans[1], product)
-            compare_result_right = CompareResult.objects.get(last=pair[1], scan_1=scans[1])
+            compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=scans[1]).first()
 
         average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
 
@@ -85,9 +84,8 @@ def get_foot_best_size(product, scans):
 
 
 def get_default_scan(user, scan_type):
-    try:
-        scan = user.default_scans.get(model_type=scan_type)
-    except Scan.DoesNotExist:
+    scan = user.default_scans.filter(model_type=scan_type).first()
+    if scan is None:
         scan = Scan.objects.filter(user=user, model_type=scan_type).first()
         if scan is not None:
             user.default_scans.add(scan)
