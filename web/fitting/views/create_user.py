@@ -16,10 +16,14 @@ def create_user(request):
     size_value = request.GET.get('size', '35')
     size_type = request.GET.get('type', ModelType.TYPE_FOOT)
     
-    user = User(uuid=user_uuid)
-    user.save()
-    size = Size.objects.get(value=size_value, model_type=size_type)
-    user.sizes.add(size)
+    user = User.objects.filter(uuid=user_uuid).first()
+    if user is None:
+        user = User(uuid=user_uuid)
+        user.save()
+        size = Size.objects.get(value=size_value, model_type=size_type)
+        user.sizes.add(size)
+    else:
+        size = user.sizes.get(value=size_value, model_type=size_type)
         
     return HttpResponse(
         json.dumps({ 'default_size': str(size) })
