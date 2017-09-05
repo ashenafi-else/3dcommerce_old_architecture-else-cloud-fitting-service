@@ -13,10 +13,10 @@ def compare_result_to_json(compare_result_left, compare_rsult_right):
 
     return {
         'score': int((compare_result_left.compare_result + compare_rsult_right.compare_result) / 2),
-        'output_model': compare_result_left.output_model,
-        'output_model_3d': compare_result_left.output_model_3d,
-        'size': compare_result_left.last.size.value,
-        'size_type': compare_result_left.last.size.model_type
+        'output_model': compare_result_right.output_model,
+        'output_model_3d': compare_result_right.output_model_3d,
+        'size': compare_result_right.last.size.value,
+        'size_type': compare_result_right.last.size.model_type
     }
 
 
