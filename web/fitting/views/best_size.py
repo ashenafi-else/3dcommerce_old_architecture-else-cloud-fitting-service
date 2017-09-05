@@ -28,7 +28,6 @@ def get_foot_best_size(product, scans):
         Last.objects.filter(product=product, model_type=scans[0].model_type),
         Last.objects.filter(product=product, model_type=scans[1].model_type)
     )
-
     for pair in lasts:
         compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
         if compare_result_left is None:
@@ -66,11 +65,11 @@ def get_foot_best_size(product, scans):
         last__size__numeric_value__gt=best_size.numeric_value,
         scan_1=scans[1]
     ).order_by('last__size__numeric_value').first()
-    
+
     result = {
         'best_size': compare_result_to_json(
-            CompareResult.objects.filter(last__product=product, last__size=best_size, last__model_type=scans[0].model_type).first(),
-            CompareResult.objects.filter(last__product=product, last__size=best_size, last__model_type=scans[1].model_type).first()
+            CompareResult.objects.filter(last__product=product, last__size=best_size, scan_1=scans[0]).first(),
+            CompareResult.objects.filter(last__product=product, last__size=best_size, scan_1=scans[1]).first()
         )
     }
 
@@ -103,11 +102,18 @@ def best_size(request):
 
     product_uuid = request.GET['product']
     user_uuid = request.GET['user']
-    user = User.objects.get(uuid=user_uuid)
-
+    scan_id = request.GET.get('scan', None)
     scan_type = request.GET.get('scan_type', ModelType.TYPE_FOOT)
     
+    user = User.objects.get(uuid=user_uuid)
+    
     product = Product.objects.get(uuid=product_uuid)
-    scans = (get_default_scan(user, ModelType.TYPE_LEFT_FOOT), get_default_scan(user, ModelType.TYPE_RIGHT_FOOT))
+    if scan_id is None:
+        scans = (get_default_scan(user, ModelType.TYPE_LEFT_FOOT), get_default_scan(user, ModelType.TYPE_RIGHT_FOOT))
+    else:
+        scans = (
+            Scan.objects.filter(user=user, scan_id=scan_id, model_type=ModelType.TYPE_LEFT_FOOT).first(),
+            Scan.objects.filter(user=user, scan_id=scan_id, model_type=ModelType.TYPE_RIGHT_FOOT).first()
+        )
 
     return HttpResponse(json.dumps(scan_types_functions[scan_type](product, scans)))

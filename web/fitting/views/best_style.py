@@ -34,14 +34,19 @@ def get_best_style(scan, last, compare_type):
     return result
 
 
-def foot_best_style(product, user, size, compare_type):
+def foot_best_style(product, user, scan_id, size, compare_type):
 
     result = {}
 
+    if scan_id is None:
+        left_scan = user.default_scans.filter(model_type=ModelType.TYPE_LEFT_FOOT).first()
+        right_scan = user.default_scans.filter(model_type=ModelType.TYPE_RIGHT_FOOT).first()
+    else:
+        left_scan = Scan.objects.filter(user=user, scan_id=scan_id, model_type=ModelType.TYPE_LEFT_FOOT).first()
+        right_scan = Scan.objects.filter(user=user, scan_id=scan_id, model_type=ModelType.TYPE_RIGHT_FOOT).first()
+
     left_last = Last.objects.filter(product=product, model_type=ModelType.TYPE_LEFT_FOOT, size=size).first()
     right_last = Last.objects.filter(product=product, model_type=ModelType.TYPE_RIGHT_FOOT, size=size).first()
-    left_scan = user.default_scans.filter(model_type=ModelType.TYPE_LEFT_FOOT).first()
-    right_scan = user.default_scans.filter(model_type=ModelType.TYPE_RIGHT_FOOT).first()
 
     try:
         left_result = get_best_style(left_scan, left_last, compare_type)
@@ -74,13 +79,15 @@ scan_types = {
 def best_style(request):
     user_uuid = request.GET['user']
     product_uuid = request.GET['product']
+    scan_id = request.GET.get('scan', None)
     size_type = request.GET.get('size_type', ModelType.TYPE_FOOT)
+    
     user = User.objects.get(uuid=user_uuid)
     size = user.sizes.filter(model_type=size_type).first()
     if size is None:
         user.sizes.add(Size.objects.filter(model_type=size_type).first())
     compare_type = request.GET.get('compare_type', CompareResult.MODE_METRICS)
     product = Product.objects.get(uuid=product_uuid)
-    result = scan_types[size_type](product, user, size, compare_type)
+    result = scan_types[size_type](product, user, scan_id, size, compare_type)
 
     return HttpResponse(json.dumps(result))
