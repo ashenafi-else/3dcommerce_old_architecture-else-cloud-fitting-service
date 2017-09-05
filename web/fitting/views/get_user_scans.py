@@ -34,5 +34,14 @@ def get_user_scans(request):
     scan_type = request.GET.get('type', ModelType.TYPE_FOOT)
     user = User.objects.get(uuid=user_uuid)
     user_scans = list(get_scans[scan_type](user))
-    
-    return HttpResponse(json.dumps({'user_scans': user_scans}))
+    default_scan = user.default_scans.filter(Q(model_type=ModelType.TYPE_LEFT_FOOT) | Q(model_type=ModelType.TYPE_RIGHT_FOOT)).first()
+    result = {
+        'user_scans': user_scans,
+    }
+    if default_scan is not None:
+        result['default_scan'] = {
+            'scan_id': default_scan.scan_id,
+            'scanner': default_scan.scanner,
+            'created_date': default_scan.created_date.strftime("%A, %d. %B %Y %I:%M%p")
+        }
+    return HttpResponse(json.dumps(result))
