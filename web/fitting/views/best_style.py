@@ -60,8 +60,8 @@ def foot_best_style(product, user, scan_id, size, compare_type):
     if left_result['best_style']['size'] and right_result['best_style']['size']:
         result['best_style'] = {
             'score': (left_result['best_style']['score'] + right_result['best_style']['score']) // 2,
-            'output_model': right_result['best_style']['output_model'],
-            'output_model_3d': right_result['best_style']['output_model_3d'],
+            'output_model': right_result['best_style']['output_model'] if right_result['best_style']['output_model'] else left_result['best_style']['output_model'],
+            'output_model_3d': right_result['best_style']['output_model_3d'] if right_result['best_style']['output_model_3d'] else left_result['best_style']['output_model_3d'],
             'size': right_result['best_style']['size'],
             'size_type': right_result['best_style']['size_type']
         }
