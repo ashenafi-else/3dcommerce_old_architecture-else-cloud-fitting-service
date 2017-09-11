@@ -23,7 +23,7 @@ def create_user(request):
         size = Size.objects.get(value=size_value, model_type=size_type)
         user.sizes.add(size)
     else:
-        size = user.sizes.get(value=size_value, model_type=size_type)
+        size = user.sizes.filter(model_type=size_type).first()
         
     return HttpResponse(
         json.dumps({ 'default_size': str(size) })
