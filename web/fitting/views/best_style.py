@@ -13,24 +13,28 @@ compare_methods = {
 def get_best_style(scan, last, compare_type):
 
     result = {}
+    default = {
+        'score': 0,
+        'output_model': '',
+        'output_model_3d': '',
+        'size': None,
+        'size_type': None
+    }
 
     if last and scan:
         best_style = CompareResult.objects.filter(last=last, scan_1=scan).first()
-        result['best_style'] = {
-            'score': int(best_style.compare_result),
-            'output_model': best_style.output_model,
-            'output_model_3d': best_style.output_model_3d,
-            'size': best_style.last.size.value,
-            'size_type': best_style.last.size.model_type
-        }
+        if best_style is None:
+            result['best_style'] = default
+        else:
+            result['best_style'] = {
+                'score': int(best_style.compare_result),
+                'output_model': best_style.output_model,
+                'output_model_3d': best_style.output_model_3d,
+                'size': best_style.last.size.value,
+                'size_type': best_style.last.size.model_type
+            }
     else:
-        result['best_style'] = {
-            'score': 0,
-            'output_model': '',
-            'output_model_3d': '',
-            'size': None,
-            'size_type': None
-        }
+        result['best_style'] = default
     return result
 
 
