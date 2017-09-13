@@ -20,51 +20,8 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def get_compare_result(scan, lasts):
-
-    scan_data = []
-    lasts_data = {}
-
-    scan_attributes = ScanAttribute.objects.filter(scan=scan)
-
-    for scan_attribute in scan_attributes:
-
-        lasts_attributes = LastAttribute.objects.filter(
-            scan_attribute_name=scan_attribute.name,
-            last__model_type=scan.model_type,
-            disabled=False
-        )
-
-        if lasts_attributes.exists():
-            scan_data.append(float(scan_attribute.value))
-        for lasts_attribute in lasts_attributes:
-
-            ranges = (lasts_attribute.left_limit_value, lasts_attribute.best_value, lasts_attribute.right_limit_value,)
-
-            if lasts_attribute.last.size.value not in lasts_data:
-                lasts_data[lasts_attribute.last.size.value] = ([float(lasts_attribute.value)], [ranges])
-            else:
-                lasts_data[lasts_attribute.last.size.value][0].append(float(lasts_attribute.value))
-                lasts_data[lasts_attribute.last.size.value][1].append(ranges)
-    return get_metrics_by_sizes(scan_data, [(size, metrics[0], metrics[1]) for size, metrics in lasts_data.items()])
-
-
-@transaction.atomic
-def compare_by_metrics(scan, product):
-
-    def create_file(file_name):
-        file_path = os.path.join(
-            os.sep,
-            settings.MEDIA_ROOT,
-            file_name
-        )
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        Path(file_path).touch()
-        return file_path
-
-
-    def create_fitting_visualization(compare_instance):
-        logger.debug(compare_instance.last.attachment.path)
+def create_fitting_visualization(compare_instance):
+    if compare_instance.last.attachment and compare_instance.scan_1.attachment:
         image_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.png')
         image_file_path = create_file(image_file_name)
         json_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.json')
@@ -81,12 +38,58 @@ def compare_by_metrics(scan, product):
         compare_instance.save()
 
 
+def get_compare_result(scan, lasts):
+
+    scan_data = []
+    lasts_data = {}
+    metrics = []
+
+    scan_attributes = ScanAttribute.objects.filter(scan=scan)
+
+    for scan_attribute in scan_attributes:
+
+        need_to_add = False
+        for last in lasts:
+            last_attribute = LastAttribute.objects.filter(
+                scan_attribute_name=scan_attribute.name,
+                last=last,
+                disabled=False
+            ).first()
+
+            if last_attribute is not None:
+                ranges = (last_attribute.left_limit_value, last_attribute.best_value, last_attribute.right_limit_value,)
+
+                if last_attribute.last.size.value not in lasts_data:
+                    lasts_data[last_attribute.last.size.value] = ([float(last_attribute.value)], [ranges])
+                else:
+                    lasts_data[last_attribute.last.size.value][0].append(float(last_attribute.value))
+                    lasts_data[last_attribute.last.size.value][1].append(ranges)
+                need_to_add = True
+
+        if need_to_add:
+            scan_data.append(float(scan_attribute.value))
+            metrics.append(scan_attribute.name)
+            
+    return (get_metrics_by_sizes(scan_data, [(size, metrics[0], metrics[1]) for size, metrics in lasts_data.items()]), metrics)
+
+
+@transaction.atomic
+def compare_by_metrics(scan, product):
+
+    def create_file(file_name):
+        file_path = os.path.join(
+            os.sep,
+            settings.MEDIA_ROOT,
+            file_name
+        )
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        Path(file_path).touch()
+        return file_path
+
+
     def save_results(scan, lasts, results):
 
-        best_result = CompareResult(
-            compare_result=0
-        )
-        for result in results:
+        for result in results[0]:
 
             last = lasts.filter(size__value=result[0]).first()
 
@@ -105,11 +108,9 @@ def compare_by_metrics(scan, product):
                     compare_mode=CompareResult.MODE_METRICS
                 )
             compare_result.compare_result = result[1]
+            compare_result.output_difference = [{'name': metric, 'difference': diff} for diff, metric in zip(result[2], results[1])]
+
             compare_result.save()
-            if compare_result.compare_result > best_result.compare_result:
-                best_result = compare_result
-        if best_result.last.attachment and best_result.scan_1.attachment:
-            create_fitting_visualization(best_result)
 
     lasts = Last.objects.filter(product=product, model_type=scan.model_type)
     compare = get_compare_result(scan, lasts)
@@ -118,25 +119,33 @@ def compare_by_metrics(scan, product):
 compare_functions = [compare_by_metrics, ]
 
 
-class CompareScansThread(Thread):
+class VisualisationThread(Thread):
 
     def __init__(self, scan, products):
         self.scan = scan     
         self.products = products
-        super(CompareScansThread, self).__init__()
+        super(VisualisationThread, self).__init__()
 
     def run(self):
         try:
             for product in self.products:
-                for compare_function in compare_functions:
-                    try:
-                        compare_function(self.scan, product)
-                        logger.debug('shoe {} and scan {} are compared'.format(product, self.scan))
-                    except Exception as e:
-                        traceback.print_exc(file=sys.stdout)
-                        logger.debug('shoe {} and scan {} are not compared'.format(product, self.scan))
-        except Scan.DoesNotExist:
-            logger.log('Scan {} not compared'.format(self.scan))
+                best_size = CompareResult.objects.filter(last__product=product).order_by('-compare_result').first()
+                if best_size is not None:
+                    create_fitting_visualization(best_size)
+                    previous_result = CompareResult.objects.filter(
+                        last__product=product,
+                        last__size__numeric_value__lt=best_size.last.size.numeric_value
+                    ).order_by('-last__size__numeric_value').first()
+                    if previous_result is not None:
+                        create_fitting_visualization(previous_result)
+                    next_result = CompareResult.objects.filter(
+                        last__product=product,
+                        last__size__numeric_value__gt=best_size.last.size.numeric_value
+                    ).order_by('last__size__numeric_value').first()
+                    if next_result is not None:
+                        create_fitting_visualization(next_result)
+        except Exception as e:
+            logger.error(f'visualisation for scan {self.scan} does not created')
+            logger.error(e)
         finally:
-            logger.debug('connection for scan {} close'.format(self.scan))
             connection.close()

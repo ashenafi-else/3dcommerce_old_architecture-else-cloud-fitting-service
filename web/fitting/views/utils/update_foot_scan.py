@@ -20,10 +20,10 @@ def update_foot_scans(user, scanner, scan_id, scan_type):
 	except requests.HTTPError:
 		traceback.print_exc(file=sys.stdout)
 		right_scan = None
-	if left_scan is None and right_scan is None:
-		raise ValueError('Left and right scans aren`t exist together')
-	return [
-		left_scan,
-		right_scan
-	]
+	scans = []
+	if left_scan is not None:
+		scans.append(left_scan)
+	if right_scan is not None:
+		scans.append(right_scan)
+	return scans
 

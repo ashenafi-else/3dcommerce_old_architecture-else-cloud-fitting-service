@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from fitting.models import Scan, User, ModelType, Product, ScanAttribute
-from .utils import update_foot_scans, CompareScansThread, set_default_scan
+from .utils import update_foot_scans, compare_by_metrics, set_default_scan, VisualisationThread
 import logging
 from web.settings import str2bool
 import sys, traceback
@@ -29,15 +29,22 @@ def update_scan_view(request):
     if user is None:
         user = User(uuid=user_uuid)
         user.save()
+    scans = update_scan(user, scanner, scan_id, scan_type)
+    if len(scans) == 0:
+        return HttpResponseBadRequest()
     try:
-        scans = update_scan(user, scanner, scan_id, scan_type)
         for scan in scans:
             products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
-            CompareScansThread(scan, products).start()
-    except ValueError:
-        logger.debug(f'scan {scan_id} desn`t update')
+            for product in products:
+                compare_by_metrics(scan, product)
+            VisualisationThread(scan, products).start()
+    except Exception as e:
+        logger.error(f'scan {scan_id} desn`t compare')
         traceback.print_exc(file=sys.stdout)
-        return HttpResponseBadRequest()
+    for scan in scans:
+        products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
+        VisualisationThread(scan, products).start()
+        
 
     if is_scan_default or not user.default_scans.all().exists():
         for scan in scans:

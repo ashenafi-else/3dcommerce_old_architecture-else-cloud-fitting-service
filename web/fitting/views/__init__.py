@@ -9,3 +9,4 @@ from .set_default_scan import set_default_scan_view
 from .set_default_size import set_default_size_view
 from .copy_last import copy_last
 from .create_user import create_user
+from .get_default_size import get_default_size_view

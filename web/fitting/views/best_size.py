@@ -15,6 +15,10 @@ def compare_result_to_json(compare_result_left, compare_result_right):
         'score': int((compare_result_left.compare_result + compare_result_right.compare_result) / 2),
         'output_model': compare_result_right.output_model if compare_result_right.output_model else compare_result_left.output_model,
         'output_model_3d': compare_result_right.output_model_3d if compare_result_right.output_model_3d else compare_result_left.output_model_3d,
+        'output_differences': {
+            'right': compare_result_right.output_difference,
+            'left': compare_result_left.output_difference,
+        },
         'size': compare_result_right.last.size.value,
         'size_type': compare_result_right.last.size.model_type
     }

@@ -7,7 +7,7 @@ name = "TEST5"
 
 def get_distances_by_sizes(scan_data, lasts_data):
 
-    lasts_distances = []  # list of (size, real_distance, out_of_range_distance)
+    lasts_distances = []  # list of (size, real_distance, out_of_range_distance, deviations_by_axis)
 
     for last in lasts_data:
         real_distance = math.sqrt(
@@ -22,7 +22,9 @@ def get_distances_by_sizes(scan_data, lasts_data):
                 )
         )
 
-        lasts_distances.append((last[0], real_distance, out_of_range_distance))
+        deviations_by_axis = [(-val[2][0], val[1] - (val[0] + val[2][1]), val[2][2]) for val in zip(scan_data, last[1], last[2])]
+
+        lasts_distances.append((last[0], real_distance, out_of_range_distance, deviations_by_axis))
 
     return lasts_distances
 
@@ -38,6 +40,6 @@ def get_metrics_by_sizes(scan_data, lasts_data):
     for last in lasts_distances:
         metric = (1 - last[2] / max_distance) * 100
 
-        lasts_metrics.append((last[0], metric))
+        lasts_metrics.append((last[0], metric, last[3]))
 
     return lasts_metrics

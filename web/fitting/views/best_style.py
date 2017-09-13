@@ -17,6 +17,7 @@ def get_best_style(scan, last, compare_type):
         'score': 0,
         'output_model': '',
         'output_model_3d': '',
+        'output_differences': None,
         'size': None,
         'size_type': None
     }
@@ -30,6 +31,7 @@ def get_best_style(scan, last, compare_type):
                 'score': int(best_style.compare_result),
                 'output_model': best_style.output_model,
                 'output_model_3d': best_style.output_model_3d,
+                'output_differences': best_style.output_difference,
                 'size': best_style.last.size.value,
                 'size_type': best_style.last.size.model_type
             }
@@ -66,6 +68,10 @@ def foot_best_style(product, user, scan_id, size, compare_type):
             'score': (left_result['best_style']['score'] + right_result['best_style']['score']) // 2,
             'output_model': right_result['best_style']['output_model'] if right_result['best_style']['output_model'] else left_result['best_style']['output_model'],
             'output_model_3d': right_result['best_style']['output_model_3d'] if right_result['best_style']['output_model_3d'] else left_result['best_style']['output_model_3d'],
+            'output_differences': {
+                'right': right_result['best_style']['output_differences'],
+                'left': left_result['best_style']['output_differences'],
+            },
             'size': right_result['best_style']['size'],
             'size_type': right_result['best_style']['size_type']
         }
