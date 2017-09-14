@@ -29,8 +29,8 @@ def get_foot_best_size(product, scans):
     best_size_result = CompareResult.MIN
     best_size = None
     lasts = zip(
-        Last.objects.filter(product=product, model_type=scans[0].model_type).ordrer_by('size__value'),
-        Last.objects.filter(product=product, model_type=scans[1].model_type).ordrer_by('size__value')
+        Last.objects.filter(product=product, model_type=scans[0].model_type).order_by('size__value'),
+        Last.objects.filter(product=product, model_type=scans[1].model_type).order_by('size__value')
     )
     for pair in lasts:
         compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
