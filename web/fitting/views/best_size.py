@@ -29,8 +29,8 @@ def get_foot_best_size(product, scans):
     best_size_result = CompareResult.MIN
     best_size = None
     lasts = zip(
-        Last.objects.filter(product=product, model_type=scans[0].model_type),
-        Last.objects.filter(product=product, model_type=scans[1].model_type)
+        Last.objects.filter(product=product, model_type=scans[0].model_type).ordrer_by('size__value'),
+        Last.objects.filter(product=product, model_type=scans[1].model_type).ordrer_by('size__value')
     )
     for pair in lasts:
         compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
@@ -79,7 +79,7 @@ def get_foot_best_size(product, scans):
             CompareResult.objects.filter(last__product=product, last__size=best_size, scan_1=scans[1]).first()
         )
     }
-
+    logger.debug(result)
     if prev_best_size_result_left is not None:
         result['prev_best_size'] = compare_result_to_json(prev_best_size_result_left, prev_best_size_result_right)
 
