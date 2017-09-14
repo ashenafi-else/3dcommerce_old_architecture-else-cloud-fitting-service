@@ -43,10 +43,6 @@ def get_foot_best_size(product, scans):
             compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=scans[1]).first()
 
         average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
-        logger.debug('________________________')
-        logger.debug(f'left: {compare_result_left.compare_result}, right: {compare_result_right.compare_result}, size: {pair[0].size}')
-        logger.debug(f'average_result: {average_result}, best_size_result: {best_size_result}, best_size: {best_size}, product: {pair[0].product}')
-        logger.debug('________________________')
         if average_result > best_size_result:
             best_size_result = average_result
             best_size = pair[0].size
@@ -79,7 +75,6 @@ def get_foot_best_size(product, scans):
             CompareResult.objects.filter(last__product=product, last__size=best_size, scan_1=scans[1]).first()
         )
     }
-    logger.debug(result)
     if prev_best_size_result_left is not None:
         result['prev_best_size'] = compare_result_to_json(prev_best_size_result_left, prev_best_size_result_right)
 

@@ -20,6 +20,17 @@ import os
 logger = logging.getLogger(__name__)
 
 
+def create_file(file_name):
+        file_path = os.path.join(
+            os.sep,
+            settings.MEDIA_ROOT,
+            file_name
+        )
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        Path(file_path).touch()
+        return file_path
+
+
 def create_fitting_visualization(compare_instance):
     if compare_instance.last.attachment and compare_instance.scan_1.attachment:
         image_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.png')
@@ -76,16 +87,6 @@ def get_compare_result(scan, lasts):
 @transaction.atomic
 def compare_by_metrics(scan, product):
 
-    def create_file(file_name):
-        file_path = os.path.join(
-            os.sep,
-            settings.MEDIA_ROOT,
-            file_name
-        )
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        Path(file_path).touch()
-        return file_path
-
 
     def save_results(scan, lasts, results):
 
@@ -129,18 +130,20 @@ class VisualisationThread(Thread):
     def run(self):
         try:
             for product in self.products:
-                best_size = CompareResult.objects.filter(last__product=product).order_by('-compare_result').first()
+                best_size = CompareResult.objects.filter(last__product=product, scan_1=self.scan).order_by('-compare_result').first()
                 if best_size is not None:
                     create_fitting_visualization(best_size)
                     previous_result = CompareResult.objects.filter(
                         last__product=product,
-                        last__size__numeric_value__lt=best_size.last.size.numeric_value
+                        last__size__numeric_value__lt=best_size.last.size.numeric_value,
+                        scan_1=self.scan
                     ).order_by('-last__size__numeric_value').first()
                     if previous_result is not None:
                         create_fitting_visualization(previous_result)
                     next_result = CompareResult.objects.filter(
                         last__product=product,
-                        last__size__numeric_value__gt=best_size.last.size.numeric_value
+                        last__size__numeric_value__gt=best_size.last.size.numeric_value,
+                        scan_1=self.scan
                     ).order_by('last__size__numeric_value').first()
                     if next_result is not None:
                         create_fitting_visualization(next_result)
