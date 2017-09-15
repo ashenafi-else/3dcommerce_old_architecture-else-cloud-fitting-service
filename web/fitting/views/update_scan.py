@@ -37,13 +37,11 @@ def update_scan_view(request):
             products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
             for product in products:
                 compare_by_metrics(scan, product)
-            VisualisationThread(scan, products).start()
     except Exception as e:
         logger.error(f'scan {scan_id} desn`t compare')
         traceback.print_exc(file=sys.stdout)
-    for scan in scans:
-        products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
-        VisualisationThread(scan, products).start()
+    products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
+    VisualisationThread(scans[0], scans[1], products).start()
         
 
     if is_scan_default or not user.default_scans.all().exists():

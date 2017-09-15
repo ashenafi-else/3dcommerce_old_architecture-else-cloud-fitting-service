@@ -84,6 +84,31 @@ def get_compare_result(scan, lasts):
     return (get_metrics_by_sizes(scan_data, [(size, metrics[0], metrics[1]) for size, metrics in lasts_data.items()]), metrics)
 
 
+def get_best_size(product, left_scan, right_scan):
+
+    best_size_result = CompareResult.MIN
+    best_pair = (None, None)
+    lasts = zip(
+        Last.objects.filter(product=product, model_type=left_scan.model_type).order_by('size__value'),
+        Last.objects.filter(product=product, model_type=right_scan.model_type).order_by('size__value')
+    )
+    for pair in lasts:
+        compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
+        if compare_result_left is None:
+            compare_by_metrics(scans[0], product)
+            compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
+        compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
+        if compare_result_right is None:
+            compare_by_metrics(scans[1], product)
+            compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
+
+        average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
+        if average_result > best_size_result:
+            best_size_result = average_result
+            best_pair = pair
+    return best_pair
+
+
 @transaction.atomic
 def compare_by_metrics(scan, product):
 
@@ -122,33 +147,41 @@ compare_functions = [compare_by_metrics, ]
 
 class VisualisationThread(Thread):
 
-    def __init__(self, scan, products):
-        self.scan = scan     
+    def __init__(self, left_scan, right_scan, products):
+        self.left_scan = left_scan
+        self.right_scan = right_scan     
         self.products = products
         super(VisualisationThread, self).__init__()
 
     def run(self):
+
+        def visualisation(product, last, scan):
+            best_size = CompareResult.objects.get(last=last, scan_1=scan)
+            if best_size is not None:
+                create_fitting_visualization(best_size)
+                previous_result = CompareResult.objects.filter(
+                    last__product=product,
+                    last__size__numeric_value__lt=best_size.last.size.numeric_value,
+                    scan_1=scan
+                ).order_by('-last__size__numeric_value').first()
+                if previous_result is not None:
+                    create_fitting_visualization(previous_result)
+                next_result = CompareResult.objects.filter(
+                    last__product=product,
+                    last__size__numeric_value__gt=best_size.last.size.numeric_value,
+                    scan_1=scan
+                ).order_by('last__size__numeric_value').first()
+                if next_result is not None:
+                    create_fitting_visualization(next_result)
+
         try:
             for product in self.products:
-                best_size = CompareResult.objects.filter(last__product=product, scan_1=self.scan).order_by('-compare_result').first()
-                if best_size is not None:
-                    create_fitting_visualization(best_size)
-                    previous_result = CompareResult.objects.filter(
-                        last__product=product,
-                        last__size__numeric_value__lt=best_size.last.size.numeric_value,
-                        scan_1=self.scan
-                    ).order_by('-last__size__numeric_value').first()
-                    if previous_result is not None:
-                        create_fitting_visualization(previous_result)
-                    next_result = CompareResult.objects.filter(
-                        last__product=product,
-                        last__size__numeric_value__gt=best_size.last.size.numeric_value,
-                        scan_1=self.scan
-                    ).order_by('last__size__numeric_value').first()
-                    if next_result is not None:
-                        create_fitting_visualization(next_result)
+
+                best_pair = get_best_size(product, self.left_scan, self.right_scan)
+                visualisation(product, best_pair[0], self.left_scan)
+                visualisation(product, best_pair[1], self.right_scan)
+                
         except Exception as e:
-            logger.error(f'visualisation for scan {self.scan} does not created')
             logger.error(e)
         finally:
             connection.close()

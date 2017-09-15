@@ -2,7 +2,7 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
 from fitting.models import Scan, User, CompareResult, Last, ModelType, Product
-from .utils import compare_by_metrics
+from .utils import get_best_size
 from django.utils.datastructures import MultiValueDictKeyError
 import logging
 
@@ -26,26 +26,8 @@ def compare_result_to_json(compare_result_left, compare_result_right):
 
 def get_foot_best_size(product, scans):
 
-    best_size_result = CompareResult.MIN
-    best_size = None
-    lasts = zip(
-        Last.objects.filter(product=product, model_type=scans[0].model_type).order_by('size__value'),
-        Last.objects.filter(product=product, model_type=scans[1].model_type).order_by('size__value')
-    )
-    for pair in lasts:
-        compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
-        if compare_result_left is None:
-            compare_by_metrics(scans[0], product)
-            compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=scans[0]).first()
-        compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=scans[1]).first()
-        if compare_result_right is None:
-            compare_by_metrics(scans[1], product)
-            compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=scans[1]).first()
-
-        average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
-        if average_result > best_size_result:
-            best_size_result = average_result
-            best_size = pair[0].size
+    best_pair = get_best_size(product, scans[0], scans[1])
+    best_size = best_pair[0].size
 
     prev_best_size_result_left = CompareResult.objects.filter(
         last__product=product,
@@ -71,8 +53,8 @@ def get_foot_best_size(product, scans):
 
     result = {
         'best_size': compare_result_to_json(
-            CompareResult.objects.filter(last__product=product, last__size=best_size, scan_1=scans[0]).first(),
-            CompareResult.objects.filter(last__product=product, last__size=best_size, scan_1=scans[1]).first()
+            CompareResult.objects.filter(last__product=product, last=best_pair[0], scan_1=scans[0]).first(),
+            CompareResult.objects.filter(last__product=product, last=best_pair[1], scan_1=scans[1]).first()
         )
     }
     if prev_best_size_result_left is not None:
