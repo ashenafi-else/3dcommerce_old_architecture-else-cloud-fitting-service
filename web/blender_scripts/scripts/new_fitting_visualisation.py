@@ -1,6 +1,7 @@
 import sys
 import bpy
 import bmesh
+import math
 import mathutils
 from mathutils.bvhtree import BVHTree
 
@@ -71,26 +72,57 @@ def rescale(obj, vec):
     obj_mesh.free()
 
 
-def adding_model_curvature(scan, model):
-    """add curvature to scan by model feet
+def recalculate_scan_length(scan, model):
 
-    :param scan: scan object
-    :type scan: bpy.types.Object
-    :param model: model object
-    :type model: bpy.types.Object
-    """
-    min_coord = int(min(ver.co.x for ver in model.verts))
-    max_coord = int(max(ver.co.x for ver in model.verts))
+    model_mesh = bmesh.new()
+    model_mesh.from_mesh(model.data)
+
+    min_coord = int(min(ver.co.x for ver in model_mesh.verts))
+    max_coord = int(max(ver.co.x for ver in model_mesh.verts))
 
     step = 1
 
+    foot_values = []
     for n in range(min_coord, max_coord, step):
-        ver_in_range = [ver.co.z for ver in model.verts if (n - step) < ver.co.x < n or int(ver.co.x) == n]
+        ver_in_range = [ver.co.z for ver in model_mesh.verts if (n - step) < ver.co.x < n or int(ver.co.x) == n]
+
+        if len(ver_in_range) != 0:
+            min_in_range = min(ver_in_range)
+            foot_values.append((n, min_in_range))
+
+    foot_length = sum([math.sqrt((foot_values[n][0] - foot_values[n-1][0])**2 + (foot_values[n][1] - foot_values[n-1][1])**2) for n in range(1, len(foot_values))])
+    rescale(scan, ((max_coord - min_coord) / foot_length, 1, 1))
+
+    scan_mesh = bmesh.new()
+    scan_mesh.from_mesh(scan.data)
+    for ver in scan_mesh.verts:
+        ver.co.x -= (foot_length - (max_coord - min_coord)) / 2
+
+    scan_mesh.to_mesh(scan.data)
+    scan.data.update()
+    scan_mesh.free()
+
+
+
+def adding_model_curvature(scan_mesh, model_mesh):
+    """add curvature to scan_mesh by model_mesh feet
+
+    :param scan_mesh: scan_mesh object
+    :type scan_mesh: bpy.types.Object
+    :param model_mesh: model_mesh object
+    :type model_mesh: bpy.types.Object
+    """
+    min_coord = int(min(ver.co.x for ver in model_mesh.verts))
+    max_coord = int(max(ver.co.x for ver in model_mesh.verts))
+
+    step = 1
+    for n in range(min_coord, max_coord, step):
+        ver_in_range = [ver.co.z for ver in model_mesh.verts if (n - step) < ver.co.x < n or int(ver.co.x) == n]
 
         if len(ver_in_range) != 0:
             min_in_range = min(ver_in_range)
 
-            ver_in_range2 = [ver for ver in scan.verts if (n - step) < ver.co.x < n or int(ver.co.x) == n]
+            ver_in_range2 = [ver for ver in scan_mesh.verts if (n - step) < ver.co.x < n or int(ver.co.x) == n]
             if len(ver_in_range2) != 0:
                 min_in_range2 = min(ver.co.z for ver in ver_in_range2)
 
@@ -192,6 +224,8 @@ def generate_comparison_image(model_path, scan_path, output_path):
     # move to zero
     move_to_zero(model)
     move_to_zero(scan)
+
+    recalculate_scan_length(scan, model)
 
     # load meshes
     model_mesh = bmesh.new()
