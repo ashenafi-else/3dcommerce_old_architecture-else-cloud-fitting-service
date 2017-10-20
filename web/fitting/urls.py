@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'^update_user_scan', views.update_scan_view),
+    url(r'^update_last_scan', views.update_last_scan_view),
     url(r'^best_style', views.best_style),
     url(r'^best_size', views.best_size),
     url(r'^user_profile', views.get_user_profile),
