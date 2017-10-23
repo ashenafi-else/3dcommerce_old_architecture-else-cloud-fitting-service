@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from fitting.models import Scan, User, ModelType, Product, ScanAttribute
 from .utils import update_foot_scans, compare_by_metrics, set_default_scan, VisualisationThread, get_last_scan_id
@@ -28,31 +28,30 @@ def update_last_scan_view(request):
         user = User(uuid=user_uuid)
         user.save()
     scan_id = get_last_scan_id(user, scanner, interval)
-    # scans = update_scan(user, scanner, scan_id, scan_type)
-    # if len(scans) == 0:
-    #     return HttpResponseBadRequest()
-    # try:
-    #     for scan in scans:
-    #         products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
-    #         for product in products:
-    #             compare_by_metrics(scan, product)
-    # except Exception as e:
-    #     logger.error(f'scan {scan_id} desn`t compare')
-    #     traceback.print_exc(file=sys.stdout)
-    # products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
-    # VisualisationThread(scans[0], scans[1], products).start()
+    if scan_id is None:
+        return HttpResponseNotFound(json.dumps({'error': 'scan by given interval does not exist.'}))
+    scans = update_scan(user, scanner, scan_id, scan_type)
+    if len(scans) == 0:
+        return HttpResponseNotFound(json.dumps({'error': 'scan is not found.'}))
+    try:
+        for scan in scans:
+            products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
+            for product in products:
+                compare_by_metrics(scan, product)
+    except Exception as e:
+        logger.error(f'scan {scan_id} desn`t compare')
+        traceback.print_exc(file=sys.stdout)
+    products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
+    VisualisationThread(scans[0], scans[1], products).start()
         
 
-    # if is_scan_default or not user.default_scans.all().exists():
-    #     for scan in scans:
-    #         set_default_scan(user, scan)
+    if is_scan_default or not user.default_scans.all().exists():
+        for scan in scans:
+            set_default_scan(user, scan)
         
 
-    # return HttpResponse(
-    #     json.dumps([str(scan) for scan in scans])
-    # )
     return HttpResponse(
-        scan_id
+        json.dumps([str(scan) for scan in scans])
     )
 
 def update_scan(user, scanner, scan_id, scan_type):

@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import logging
 import re
@@ -12,6 +12,7 @@ def get_last_scan_id(user, scanner, interval):
     request = requests.get(
         url=url,
     )
+    request_date = datetime.strptime(request.headers['Date'].strip(), '%a, %d %b %Y %H:%M:%S %Z')
     bs = BeautifulSoup(request.text, 'html.parser')
     image_tag = bs.find('img', alt='[DIR]')
     row = None
@@ -26,5 +27,8 @@ def get_last_scan_id(user, scanner, interval):
             string_date = date_tag.string
         if string_date is not None:
             date = datetime.strptime(string_date.strip(), '%Y-%m-%d %H:%M')
-        logger.debug(date)
+        if request_date and date:
+            diff = request_date - date
+            if diff < timedelta(minutes=interval):
+                scan_id = row.find('a', href=True,).string.split('/')[0]
     return scan_id
