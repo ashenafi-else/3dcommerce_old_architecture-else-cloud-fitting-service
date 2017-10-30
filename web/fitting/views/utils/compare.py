@@ -95,11 +95,11 @@ def get_best_size(product, left_scan, right_scan):
     for pair in lasts:
         compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
         if compare_result_left is None:
-            compare_by_metrics(scans[0], product)
+            compare_by_metrics(left_scan, product)
             compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
         compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
         if compare_result_right is None:
-            compare_by_metrics(scans[1], product)
+            compare_by_metrics(right_scan, product)
             compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
 
         average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
