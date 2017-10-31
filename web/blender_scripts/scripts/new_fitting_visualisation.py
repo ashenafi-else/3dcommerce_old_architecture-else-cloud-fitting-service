@@ -305,7 +305,7 @@ def generate_comparison_image(model_path, scan_path, output_path):
     bpy.ops.object.delete()
 
     # render image
-    camera = bpy.data.objects["cameraTOP"]
+    camera = bpy.data.objects["cameraLEFTp"]
     render_image(camera, (1080, 1920), output_path)
 
 generate_comparison_image(model_file_path, scan_file_path, output_image_file_path)
