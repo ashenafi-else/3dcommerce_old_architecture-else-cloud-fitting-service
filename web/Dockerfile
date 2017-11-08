@@ -9,6 +9,7 @@ RUN pip install -r requirements.txt
 # --------- BLENDER ---------
 
 ADD ./transparent_environment.blend /www/transparent_environment.blend
+ADD ./logo.webm /www/logo.webm
 
 RUN apt-get update && \
 	apt-get install -y \
