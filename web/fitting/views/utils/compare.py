@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db import connection, transaction
 
-from fitting.models import Scan, CompareResult, ScanAttribute, LastAttribute, Last, Product
+from fitting.models import Scan, CompareResult, CompareVisuzalization, ScanAttribute, LastAttribute, Last, Product
 from fitting_algorithm import get_metrics_by_sizes
 from fitting.utils import gen_file_name
 from blender_scripts.worker import execute_blender_script
@@ -33,9 +33,9 @@ def create_file(file_name):
 
 def create_fitting_visualization(compare_instance):
     if compare_instance.last.attachment and compare_instance.scan_1.attachment:
-        image_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.png')
+        image_file_name = gen_file_name(compare_instance, 'FITTING.png')
         image_file_path = create_file(image_file_name)
-        json_file_name = gen_file_name(compare_instance, f'{compare_instance.compare_type}.json')
+        json_file_name = gen_file_name(compare_instance, 'FITTING.json')
         json_file_path = create_file(json_file_name)
         execute_blender_script(
             script='new_fitting_visualisation.py',
@@ -47,6 +47,26 @@ def create_fitting_visualization(compare_instance):
         compare_instance.output_model = '/'.join([settings.PROXY_HOST] + image_file_path.split('/')[2:])
         compare_instance.output_model_3d = '/'.join([settings.PROXY_HOST] + json_file_path.split('/')[2:])
         compare_instance.save()
+
+
+def visualisation(best_last, scan):
+    best_size = CompareVisuzalization.objects.filter(last=last, scan_1=scan).first()
+    lasts = [best_last,]
+    previous_model = Last.objects.filter(
+        product=best_last.product,
+        size__numeric_value__lt=best_size.last.size.numeric_value).order_by('-size__numeric_value').first()
+    if previous_model is not None:
+        lasts.append(previous_model)
+    next_model = Last.objects.filter(
+        product=best_last.product,
+        size__numeric_value__gt=best_size.last.size.numeric_value).order_by('size__numeric_value').first()
+    if next_model is not None:
+        lasts.append(next_model)
+    for model in lasts:
+        visualisation_instance = CompareVisuzalization.objects.filter(last=last, scan_1=scan).latest()
+        if visualisation_instance is None:
+            visualisation_instance = CompareVisuzalization.objects.create(last=last, scan_1=scan)
+            create_fitting_visualization(visualisation_instance)
 
 
 def get_compare_result(scan, lasts):
@@ -155,33 +175,14 @@ class VisualisationThread(Thread):
 
     def run(self):
 
-        def visualisation(product, last, scan):
-            best_size = CompareResult.objects.get(last=last, scan_1=scan)
-            if best_size is not None:
-                create_fitting_visualization(best_size)
-                previous_result = CompareResult.objects.filter(
-                    last__product=product,
-                    last__size__numeric_value__lt=best_size.last.size.numeric_value,
-                    scan_1=scan
-                ).order_by('-last__size__numeric_value').first()
-                if previous_result is not None:
-                    create_fitting_visualization(previous_result)
-                next_result = CompareResult.objects.filter(
-                    last__product=product,
-                    last__size__numeric_value__gt=best_size.last.size.numeric_value,
-                    scan_1=scan
-                ).order_by('last__size__numeric_value').first()
-                if next_result is not None:
-                    create_fitting_visualization(next_result)
-
-        try:
-            for product in self.products:
+        for product in self.products:
+            try:
 
                 best_pair = get_best_size(product, self.left_scan, self.right_scan)
-                visualisation(product, best_pair[0], self.left_scan)
-                visualisation(product, best_pair[1], self.right_scan)
-                
-        except Exception as e:
-            logger.error(e)
-        finally:
-            connection.close()
+                visualisation(best_pair[0], self.left_scan)
+                visualisation(best_pair[1], self.right_scan)
+                    
+            except Exception as e:
+                logger.error(e)
+            finally:
+                connection.close()

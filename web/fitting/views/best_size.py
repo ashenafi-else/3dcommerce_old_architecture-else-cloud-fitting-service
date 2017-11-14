@@ -2,7 +2,7 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
 from fitting.models import Scan, User, CompareResult, Last, ModelType, Product
-from .utils import get_best_size
+from .utils import get_best_size, visualization
 from django.utils.datastructures import MultiValueDictKeyError
 import logging
 
@@ -27,13 +27,21 @@ def compare_result_to_json(compare_result_left, compare_result_right):
 def get_foot_best_size(product, scans):
 
     best_pair = get_best_size(product, scans[0], scans[1])
+    visualisation(best_pair[0], scans[0])
+    visualisation(best_pair[1], scans[1])
     best_size = best_pair[0].size
 
+    previous_model = Last.objects.filter(
+        product=best_pair[0].product,
+        size__numeric_value__lt=best_size.last.size.numeric_value).order_by('-size__numeric_value').first()
+    next_model = Last.objects.filter(
+        product=best_pair[0].product,
+        size__numeric_value__gt=best_size.last.size.numeric_value).order_by('size__numeric_value').first()
+
     prev_best_size_result_left = CompareResult.objects.filter(
-        last__product=product,
-        last__size__numeric_value__lt=best_size.numeric_value,
+        last=previous_model,
         scan_1=scans[0]
-    ).order_by('last__size__numeric_value').last()
+    ).order_by('last__size__numeric_value').latest() if previous_model is not None else None
     prev_best_size_result_right = CompareResult.objects.filter(
         last__product=product,
         last__size__numeric_value__lt=best_size.numeric_value,

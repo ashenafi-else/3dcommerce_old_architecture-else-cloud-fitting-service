@@ -30,8 +30,6 @@ class CompareResult(models.Model):
 	scan_1 = models.ForeignKey('Scan', related_name='scan_1', null=False,)
 	scan_2 = models.ForeignKey('Scan', related_name='scan_2', null=True, blank=True)
 	compare_result = models.FloatField()
-	output_model = models.CharField(max_length=1000, blank=True)
-	output_model_3d = models.CharField(max_length=1000, blank=True)
 	output_difference = JSONField(default={}, blank=True)
 	compare_type = models.CharField(
 		max_length=64,
@@ -50,9 +48,3 @@ class CompareResult(models.Model):
 
 	def __str__(self):
 		return f'last: {self.last}, scan_1: {self.scan_1}, scan_2: {self.scan_2}, result: {self.compare_result}'
-
-@receiver(models.signals.post_delete, sender=CompareResult)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    if instance.output_model:
-        if os.path.isfile(instance.output_model):
-            os.remove(instance.output_model)
