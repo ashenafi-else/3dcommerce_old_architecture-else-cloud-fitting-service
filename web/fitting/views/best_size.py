@@ -1,7 +1,7 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
-from fitting.models import Scan, User, CompareResult, Last, ModelType, Product
+from fitting.models import Scan, User, CompareResult, CompareVisualization, Last, ModelType, Product
 from .utils import get_best_size, visualization
 from django.utils.datastructures import MultiValueDictKeyError
 import logging
@@ -11,10 +11,20 @@ logger = logging.getLogger(__name__)
 
 def compare_result_to_json(compare_result_left, compare_result_right):
 
+    visualization_result = CompareVisualization.objects.filter(
+        last=compare_result_left.last,
+        scan_1=compare_result_left.scan_1
+    ).first()
+    if visualization_result is None or visualization_result.output_model_3d is None:
+        visualization_result = CompareVisualization.objects.filter(
+            last=compare_result_right.last,
+            scan_1=compare_result_right.scan_1
+        ).first()
+
     return {
         'score': int((compare_result_left.compare_result + compare_result_right.compare_result) / 2),
-        'output_model': compare_result_right.output_model if compare_result_right.output_model else compare_result_left.output_model,
-        'output_model_3d': compare_result_right.output_model_3d if compare_result_right.output_model_3d else compare_result_left.output_model_3d,
+        'output_model': visualization_result.output_model if visualization_result is not None else None,
+        'output_model_3d': visualization_result.output_model_3d if visualization_result is not None else None,
         'output_differences': {
             'right': compare_result_right.output_difference,
             'left': compare_result_left.output_difference,
@@ -27,21 +37,15 @@ def compare_result_to_json(compare_result_left, compare_result_right):
 def get_foot_best_size(product, scans):
 
     best_pair = get_best_size(product, scans[0], scans[1])
-    visualisation(best_pair[0], scans[0])
-    visualisation(best_pair[1], scans[1])
+    visualization(best_pair[0], scans[0])
+    visualization(best_pair[1], scans[1])
     best_size = best_pair[0].size
 
-    previous_model = Last.objects.filter(
-        product=best_pair[0].product,
-        size__numeric_value__lt=best_size.last.size.numeric_value).order_by('-size__numeric_value').first()
-    next_model = Last.objects.filter(
-        product=best_pair[0].product,
-        size__numeric_value__gt=best_size.last.size.numeric_value).order_by('size__numeric_value').first()
-
     prev_best_size_result_left = CompareResult.objects.filter(
-        last=previous_model,
+        last__product=product,
+        last__size__numeric_value__lt=best_size.numeric_value,
         scan_1=scans[0]
-    ).order_by('last__size__numeric_value').latest() if previous_model is not None else None
+    ).order_by('last__size__numeric_value').first()
     prev_best_size_result_right = CompareResult.objects.filter(
         last__product=product,
         last__size__numeric_value__lt=best_size.numeric_value,

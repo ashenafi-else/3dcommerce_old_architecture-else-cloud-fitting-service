@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Scan, Last, Product, User, ScanAttribute, CompareResult, Size
+from .models import Scan, Last, Product, User, ScanAttribute, CompareResult, Size, CompareVisualization
 from .proxy import ProductProxy, ProductAdmin, LastProxy, LastAdmin, ScanProxy, ScanAdmin, LastAttributeProxy, LastAttributeAdmin
 
 
@@ -16,3 +16,4 @@ admin.site.register(ScanAttribute)
 admin.site.register(Size)
 admin.site.register(User)
 admin.site.register(CompareResult)
+admin.site.register(CompareVisualization)

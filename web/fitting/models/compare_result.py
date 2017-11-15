@@ -27,8 +27,8 @@ class CompareResult(models.Model):
 	)
 
 	last = models.ForeignKey('Last', null=True,)
-	scan_1 = models.ForeignKey('Scan', related_name='scan_1', null=False,)
-	scan_2 = models.ForeignKey('Scan', related_name='scan_2', null=True, blank=True)
+	scan_1 = models.ForeignKey('Scan', related_name='compare_res_1', null=False,)
+	scan_2 = models.ForeignKey('Scan', related_name='compare_res_2', null=True, blank=True)
 	compare_result = models.FloatField()
 	output_difference = JSONField(default={}, blank=True)
 	compare_type = models.CharField(

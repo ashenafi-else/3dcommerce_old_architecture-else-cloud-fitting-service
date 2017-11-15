@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.admin.options import TabularInline
-from ..models import Product, Last, LastAttribute, ModelType, Size
+from ..models import Product, Last, LastAttribute, ModelType, Size, CompareResult
 from .base_models_admin import BaseModelAdmin
 from django.db import transaction
 import json
@@ -55,6 +55,8 @@ class ProductProxy(Product):
             for row in reader:
                 self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['l_f1'], row['l_shift'], row['l_f2']), ModelType.TYPE_LEFT_FOOT)
                 self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['r_f1'], row['r_shift'], row['r_f2']), ModelType.TYPE_RIGHT_FOOT)
+
+        CompareResult.objects.filter(last__product=product).delete()
 
 
 class ProductLastInline(TabularInline):
