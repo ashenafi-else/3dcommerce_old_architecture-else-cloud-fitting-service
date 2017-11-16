@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.admin.options import TabularInline
-from ..models import Product, Last, LastAttribute, ModelType, Size, CompareResult
+from ..models import Product, LastAttribute, ModelType, Size, CompareResult
+from .last import LastProxy
 from .base_models_admin import BaseModelAdmin
 from django.db import transaction
 import json
@@ -18,20 +19,18 @@ class ProductProxy(Product):
     @transaction.atomic
     def create_attribute(self, size, scan_attribute_name, name, value, ranges, last_type):
 
-        try:
-            last = Last.objects.get(product__uuid=self.uuid, size__value=size, model_type=last_type)
-        except Last.DoesNotExist:
+        last = LastProxy.objects.filter(product__uuid=self.uuid, size__value=size, model_type=last_type).first()
+        if last is None:
             product_obj = Product.objects.get(uuid=self)
             size_obj = Size.objects.get(model_type=ModelType.TYPE_FOOT, value=size)
-            last = Last(product=product_obj, size=size_obj, model_type=last_type)
+            last = LastProxy(product=product_obj, size=size_obj, model_type=last_type)
             last.save()
 
-        try:
-            attribute = LastAttribute.objects.get(
-                last=last,
-                name=name,
-            )
-        except LastAttribute.DoesNotExist:
+        attribute = LastAttribute.objects.filter(
+            last=last,
+            name=name,
+        ).last()
+        if attribute is None:
             attribute = LastAttribute(
                 last=last,
                 name=name,
@@ -47,26 +46,27 @@ class ProductProxy(Product):
         attribute.save()
 
     def save(self, *args, **kwargs):
+        old_product = ProductProxy.objects.get(pk=self.pk)
+        if self.attachment != old_product.attachment:
+            with open(self.attachment.path) as csvfile:
+                reader = csv.DictReader(csvfile, delimiter=',')
+
+                for row in reader:
+                    self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['l_f1'], row['l_shift'], row['l_f2']), ModelType.TYPE_LEFT_FOOT)
+                    self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['r_f1'], row['r_shift'], row['r_f2']), ModelType.TYPE_RIGHT_FOOT)
+
+            CompareResult.objects.filter(last__product=self).delete()
         super(ProductProxy, self).save(*args, **kwargs)
-
-        with open(self.attachment.path) as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
-
-            for row in reader:
-                self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['l_f1'], row['l_shift'], row['l_f2']), ModelType.TYPE_LEFT_FOOT)
-                self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['r_f1'], row['r_shift'], row['r_f2']), ModelType.TYPE_RIGHT_FOOT)
-
-        CompareResult.objects.filter(last__product=product).delete()
 
 
 class ProductLastInline(TabularInline):
 
-    model = Last
+    model = LastProxy
     can_delete = True
     extra = 1
 
     class Meta:
-        model = Last
+        model = LastProxy
         fields = [
             'id',
             'size',

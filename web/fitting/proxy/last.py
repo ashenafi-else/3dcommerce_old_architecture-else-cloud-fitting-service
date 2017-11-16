@@ -1,5 +1,5 @@
 from django.contrib.admin.options import TabularInline
-from ..models import LastAttribute, Last, CompareResult
+from ..models import LastAttribute, Last, CompareResult, CompareVisualization
 from .base_models_admin import BaseModelAdmin
 from django.utils.html import format_html
 from django.urls import reverse
@@ -13,9 +13,11 @@ class LastProxy(Last):
         verbose_name_plural = 'Lasts'
 
     def save(self, *args, **kwargs):
+        old_last = LastProxy.objects.get(pk=self.pk)
+        if old_last.attachment != self.attachment:
+            CompareVisualization.objects.filter(last=self).delete()
         super(LastProxy, self).save(*args, **kwargs)
-
-        CompareResult.objects.filter(last=product).delete()
+        CompareResult.objects.filter(last__product=self.product).delete()
 
 
 class LastAttributesInline(TabularInline):
