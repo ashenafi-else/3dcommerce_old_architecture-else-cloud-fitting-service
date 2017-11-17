@@ -10,8 +10,8 @@ class CompareVisualization(models.Model):
 	last = models.ForeignKey('Last', null=True,)
 	scan_1 = models.ForeignKey('Scan', related_name='compare_vis_1', null=False,)
 	scan_2 = models.ForeignKey('Scan', related_name='compare_vis_2', null=True, blank=True)
-	output_model = models.CharField(max_length=1000, blank=True)
-	output_model_3d = models.CharField(max_length=1000, blank=True)
+	output_model = models.CharField(max_length=1000, blank=True, null=True)
+	output_model_3d = models.CharField(max_length=1000, blank=True, null=True)
 
 	class Meta:
 

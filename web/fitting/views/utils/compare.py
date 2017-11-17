@@ -51,7 +51,6 @@ def create_fitting_visualization(compare_instance):
 
 @transaction.atomic
 def visualization(best_last, scan):
-    best_size = CompareVisualization.objects.filter(last=best_last, scan_1=scan).first()
     lasts = [best_last,]
     previous_model = Last.objects.filter(
         product=best_last.product,

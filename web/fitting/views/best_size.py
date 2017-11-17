@@ -12,13 +12,13 @@ logger = logging.getLogger(__name__)
 def compare_result_to_json(compare_result_left, compare_result_right):
 
     visualization_result = CompareVisualization.objects.filter(
-        last=compare_result_left.last,
-        scan_1=compare_result_left.scan_1
+        last=compare_result_right.last,
+        scan_1=compare_result_right.scan_1
     ).first()
     if visualization_result is None or visualization_result.output_model_3d is None:
         visualization_result = CompareVisualization.objects.filter(
-            last=compare_result_right.last,
-            scan_1=compare_result_right.scan_1
+            last=compare_result_left.last,
+            scan_1=compare_result_left.scan_1
         ).first()
 
     return {
