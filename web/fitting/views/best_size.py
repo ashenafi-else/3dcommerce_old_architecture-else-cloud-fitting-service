@@ -112,4 +112,8 @@ def best_size(request):
             Scan.objects.filter(user=user, scan_id=scan_id, model_type=ModelType.TYPE_RIGHT_FOOT).first()
         )
 
-    return HttpResponse(json.dumps(scan_types_functions[scan_type](product, scans)))
+    return HttpResponse(
+        json.dumps(
+            scan_types_functions[scan_type](product, scans)
+        )
+    )
