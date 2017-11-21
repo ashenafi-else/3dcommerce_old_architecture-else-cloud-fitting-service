@@ -49,23 +49,24 @@ def create_fitting_visualization(compare_instance):
         compare_instance.save()
 
 
-@transaction.atomic
 def visualization(best_last, scan):
     lasts = [best_last,]
     previous_model = Last.objects.filter(
         product=best_last.product,
-        size__numeric_value__lt=best_last.size.numeric_value).order_by('-size__numeric_value').first()
+        model_type=best_last.model_type,
+        size__numeric_value__lt=best_last.size.numeric_value).order_by('size__numeric_value').last()
     if previous_model is not None:
         lasts.append(previous_model)
     next_model = Last.objects.filter(
         product=best_last.product,
+        model_type=best_last.model_type,
         size__numeric_value__gt=best_last.size.numeric_value).order_by('size__numeric_value').first()
     if next_model is not None:
         lasts.append(next_model)
     for model in lasts:
-        visualisation_instance = CompareVisualization.objects.filter(last=best_last, scan_1=scan).first()
+        visualisation_instance = CompareVisualization.objects.filter(last=model, scan_1=scan).first()
         if visualisation_instance is None:
-            visualisation_instance = CompareVisualization.objects.create(last=best_last, scan_1=scan)
+            visualisation_instance = CompareVisualization.objects.create(last=model, scan_1=scan)
             create_fitting_visualization(visualisation_instance)
 
 
