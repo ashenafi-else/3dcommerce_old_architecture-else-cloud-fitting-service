@@ -5,7 +5,7 @@ from .model_type import ModelType
 class Size(ModelType):
 
     value = models.CharField(max_length=64)
-    numeric_value = models.IntegerField()
+    numeric_value = models.IntegerField(verbose_name='ordering value')
     
     class Meta:
 

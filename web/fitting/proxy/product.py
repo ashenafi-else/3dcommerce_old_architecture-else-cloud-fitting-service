@@ -46,8 +46,12 @@ class ProductProxy(Product):
         attribute.save()
 
     def save(self, *args, **kwargs):
-        old_product = ProductProxy.objects.get(pk=self.pk)
-        if self.attachment != old_product.attachment:
+        if self.pk is not None:
+            old_product = ProductProxy.objects.get(pk=self.pk)
+        else:
+            old_product = None
+        super(ProductProxy, self).save(*args, **kwargs)
+        if old_product is None or (self.attachment != old_product.attachment and self.attachment):
             with open(self.attachment.path) as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=',')
 
@@ -56,7 +60,6 @@ class ProductProxy(Product):
                     self.create_attribute(row['size'], row['scan_metric'], row['last_metric'], row['value'], (row['r_f1'], row['r_shift'], row['r_f2']), ModelType.TYPE_RIGHT_FOOT)
 
             CompareResult.objects.filter(last__product=self).delete()
-        super(ProductProxy, self).save(*args, **kwargs)
 
 
 class ProductLastInline(TabularInline):

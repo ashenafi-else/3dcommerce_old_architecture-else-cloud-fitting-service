@@ -13,9 +13,10 @@ class LastProxy(Last):
         verbose_name_plural = 'Lasts'
 
     def save(self, *args, **kwargs):
-        old_last = LastProxy.objects.get(pk=self.pk)
-        if old_last.attachment != self.attachment:
-            CompareVisualization.objects.filter(last=self).delete()
+        if self.pk is not None:
+            old_last = LastProxy.objects.get(pk=self.pk)
+            if old_last.attachment != self.attachment:
+                CompareVisualization.objects.filter(last=self).delete()
         super(LastProxy, self).save(*args, **kwargs)
         CompareResult.objects.filter(last__product=self.product).delete()
 
