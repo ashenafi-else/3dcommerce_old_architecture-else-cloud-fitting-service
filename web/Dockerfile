@@ -8,10 +8,6 @@ RUN pip install -r requirements.txt
 
 # --------- BLENDER ---------
 
-RUN mkdir ./attachments
-RUN mkdir ./attachments/blender_resources
-ADD ./blender_resources/logo.webm /www/attachments/blender_resources/logo.webm
-
 RUN apt-get update && \
 	apt-get install -y \
 		curl \

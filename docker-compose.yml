@@ -4,7 +4,6 @@ services:
     build: ./web
     volumes:
       - ./web:/www
-      - ./web/blender_resources:/www/attachments/blender_resources
     depends_on:
       - postgres
     command: bash start.sh

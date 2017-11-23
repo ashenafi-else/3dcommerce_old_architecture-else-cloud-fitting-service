@@ -18,7 +18,7 @@ server {
         error_page 418 = @app;
         return 418;
     }
-    
+
     location @app {
         proxy_pass http://web:8000;
         proxy_redirect     off;
