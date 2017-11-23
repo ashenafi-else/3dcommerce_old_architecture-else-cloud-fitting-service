@@ -64,10 +64,13 @@ def visualization(best_last, scan):
     if next_model is not None:
         lasts.append(next_model)
     for model in lasts:
+        visualisation_instance = CompareVisualization.objects.get_or_create(last=model, scan_1=scan)[0]
         with transaction.atomic():
-            visualisation_instance = CompareVisualization.objects.select_for_update().update_or_create(last=model, scan_1=scan)[0]
-            if visualisation_instance.output_model is None or visualisation_instance.output_model is None:
-                create_fitting_visualization(visualisation_instance)
+            locked_instance = CompareVisualization.objects.select_for_update().get(pk=visualisation_instance.pk)
+            if locked_instance is None:
+                visualisation_instance = CompareVisualization.objects.create(last=model, scan_1=scan)
+            if locked_instance.output_model is None or locked_instance.output_model is None:
+                create_fitting_visualization(locked_instance)
 
 
 def get_compare_result(scan, lasts):
