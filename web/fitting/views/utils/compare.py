@@ -49,7 +49,10 @@ def create_fitting_visualization(compare_instance):
         compare_instance.save()
 
 
+@transaction.atomic
 def visualization(best_last, scan):
+
+    locked_scan = Scan.objects.select_for_update().get(pk=scan.pk)
     lasts = [best_last,]
     previous_model = Last.objects.filter(
         product=best_last.product,
@@ -64,13 +67,10 @@ def visualization(best_last, scan):
     if next_model is not None:
         lasts.append(next_model)
     for model in lasts:
-        visualisation_instance = CompareVisualization.objects.get_or_create(last=model, scan_1=scan)[0]
-        with transaction.atomic():
-            locked_instance = CompareVisualization.objects.select_for_update().get(pk=visualisation_instance.pk)
-            if locked_instance is None:
-                visualisation_instance = CompareVisualization.objects.create(last=model, scan_1=scan)
-            if locked_instance.output_model is None or locked_instance.output_model is None:
-                create_fitting_visualization(locked_instance)
+        visualisation_instances, created = CompareVisualization.objects.get_or_create(last=model, scan_1=locked_scan)
+        if created or visualisation_instances.output_model_3d is None:
+            create_fitting_visualization(visualisation_instances)
+        transaction.savepoint()
 
 
 def get_compare_result(scan, lasts):
@@ -133,7 +133,6 @@ def get_best_size(product, left_scan, right_scan):
     return best_pair
 
 
-@transaction.atomic
 def compare_by_metrics(scan, product):
 
 
