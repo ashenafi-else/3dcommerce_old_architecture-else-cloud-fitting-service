@@ -14,6 +14,11 @@ server {
         try_files $uri $uri/ @app;
     }
 
+    location /attachments/ {
+        autoindex off;
+        try_files $uri $uri/ @app;
+    }
+
     location / {
         error_page 418 = @app;
         return 418;
