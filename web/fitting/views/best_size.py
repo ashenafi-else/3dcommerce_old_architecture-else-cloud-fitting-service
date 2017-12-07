@@ -30,7 +30,8 @@ def compare_result_to_json(compare_result_left, compare_result_right):
             'left': compare_result_left.output_difference,
         },
         'size': compare_result_right.last.size.value,
-        'size_type': compare_result_right.last.size.model_type
+        'size_type': compare_result_right.last.size.model_type,
+        'order_value': compare_result_right.last.size.numeric_value
     }
 
 
