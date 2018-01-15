@@ -21,8 +21,15 @@ def compare_result_to_json(compare_result_left, compare_result_right):
             scan_1=compare_result_left.scan_1
         ).first()
 
+    score = 0
+
+    if compare_result_left is not None:
+        score = score + compare_result_left.compare_result / 2
+    if compare_result_right is not None:
+        score = score + compare_result_right.compare_result / 2
+
     return {
-        'score': int((compare_result_left.compare_result + compare_result_right.compare_result) / 2),
+        'score': score,
         'output_model': visualization_result.output_model if visualization_result is not None else None,
         'output_model_3d': visualization_result.output_model_3d if visualization_result is not None else None,
         'output_differences': {
