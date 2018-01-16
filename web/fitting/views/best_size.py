@@ -22,11 +22,10 @@ def compare_result_to_json(compare_result_left, compare_result_right):
         ).first()
 
     score = 0
-
     if compare_result_left is not None:
-        score = score + compare_result_left.compare_result / 2
+        score = score + compare_result_left.compare_result
     if compare_result_right is not None:
-        score = score + compare_result_right.compare_result / 2
+        score = score / 2 + compare_result_right.compare_result / 2
 
     return {
         'score': score,

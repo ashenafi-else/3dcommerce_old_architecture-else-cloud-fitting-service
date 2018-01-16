@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db import connection, transaction
 
-from fitting.models import Scan, CompareResult, CompareVisualization, ScanAttribute, LastAttribute, Last, Product
+from fitting.models import Scan, CompareResult, CompareVisualization, ScanAttribute, LastAttribute, Last, Product, Size
 from fitting_algorithm import get_metrics_by_sizes
 from fitting.utils import gen_file_name
 from blender_scripts.worker import execute_blender_script
@@ -116,17 +116,33 @@ def get_best_size(product, left_scan, right_scan):
         Last.objects.filter(product=product, model_type=left_scan.model_type).order_by('size__value'),
         Last.objects.filter(product=product, model_type=right_scan.model_type).order_by('size__value')
     )
-    for pair in lasts:
-        compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
-        if compare_result_left is None:
-            compare_by_metrics(left_scan, product)
+    for size in Size.objects.all().order_by('numeric_value'):
+        pair = (
+            Last.objects.filter(product=product, model_type=left_scan.model_type, size=size).first(),
+            Last.objects.filter(product=product, model_type=right_scan.model_type, size=size).first()
+        )
+        print(pair)
+        if pair[0] is not None:
             compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
-        compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
-        if compare_result_right is None:
-            compare_by_metrics(right_scan, product)
+            if compare_result_left is None:
+                compare_by_metrics(left_scan, product)
+                compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
+        else:
+            compare_result_left = None
+        if pair[1] is not None:
             compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
+            if compare_result_right is None:
+                compare_by_metrics(right_scan, product)
+                compare_result_right = CompareResult.objects.filter(last=pair[1], scan_1=right_scan).first()
+        else:
+            compare_result_right = None
 
-        average_result = (compare_result_right.compare_result + compare_result_left.compare_result) / 2
+        average_result = 0
+        if compare_result_left is not None:
+            average_result = average_result + compare_result_left.compare_result
+        if compare_result_right is not None:
+            average_result = average_result / 2 + compare_result_right.compare_result / 2
+
         if average_result > best_size_result:
             best_size_result = average_result
             best_pair = pair
