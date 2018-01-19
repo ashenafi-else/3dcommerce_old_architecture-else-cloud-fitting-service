@@ -26,7 +26,7 @@ def get_best_style(scan, last, compare_type):
             result['best_style'] = default
         else:
             result['best_style'] = {
-                'score': int(best_style.compare_result),
+                'score': round(best_style.compare_result),
                 'output_differences': best_style.output_difference,
                 'size': best_style.last.size.value,
                 'size_type': best_style.last.size.model_type
@@ -61,7 +61,7 @@ def foot_best_style(product, user, scan_id, size, compare_type):
 
     if left_result['best_style']['size'] and right_result['best_style']['size']:
         result['best_style'] = {
-            'score': (left_result['best_style']['score'] + right_result['best_style']['score']) // 2,
+            'score': round((left_result['best_style']['score'] + right_result['best_style']['score']) / 2),
             'output_differences': {
                 'right': right_result['best_style']['output_differences'],
                 'left': left_result['best_style']['output_differences'],

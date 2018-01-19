@@ -121,7 +121,6 @@ def get_best_size(product, left_scan, right_scan):
             Last.objects.filter(product=product, model_type=left_scan.model_type, size=size).first(),
             Last.objects.filter(product=product, model_type=right_scan.model_type, size=size).first()
         )
-        print(pair)
         if pair[0] is not None:
             compare_result_left = CompareResult.objects.filter(last=pair[0], scan_1=left_scan).first()
             if compare_result_left is None:

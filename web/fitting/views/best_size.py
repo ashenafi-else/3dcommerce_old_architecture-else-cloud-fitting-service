@@ -28,7 +28,7 @@ def compare_result_to_json(compare_result_left, compare_result_right):
         score = score / 2 + compare_result_right.compare_result / 2
 
     return {
-        'score': score,
+        'score': round(score),
         'output_model': visualization_result.output_model if visualization_result is not None else None,
         'output_model_3d': visualization_result.output_model_3d if visualization_result is not None else None,
         'output_differences': {
