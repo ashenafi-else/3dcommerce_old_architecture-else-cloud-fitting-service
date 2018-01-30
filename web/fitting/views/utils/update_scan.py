@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import transaction
 from fitting.utils import gen_file_name
 from . import upload
-from fitting.models import Scan, ScanAttribute
+from fitting.models import Scan, ScanAttribute, Scanner
 from pathlib import Path
 from .attributes import *
 from blender_scripts.worker import execute_blender_script
@@ -98,9 +98,11 @@ def update_scan(user, scanner, scan_id, scan_type, scan_path):
 
     ScanAttribute.objects.filter(scan=scan).delete()
 
-    
+    sc = Scanner.objects.filter(scanner_id=scanner).first()
+    scan_url = sc.storage_account.get_account_url() if sc is not None else user.base_url
+    logger.debug(scan_url)
     try:
-        update_scan_attributes(user.base_url, scan, scan_type)
+        update_scan_attributes(scan_url, scan, scan_type)
     except requests.HTTPError:
         logger.debug('HTTPError')
         traceback.print_exc(file=sys.stdout)

@@ -17,6 +17,7 @@ update_scan_functions = {
 
 
 @csrf_exempt
+@transaction.atomic
 def update_scan_view(request):
     user_uuid = request.GET['user']
     scanner = request.GET['scanner']

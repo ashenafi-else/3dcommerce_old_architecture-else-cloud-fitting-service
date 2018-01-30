@@ -8,3 +8,5 @@ from .scan import Scan
 from .size import Size
 from .user import User
 from .model_type import ModelType
+from .scanner import Scanner
+from .storage_account import StorageAccount
